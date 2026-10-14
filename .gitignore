@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# macOS / IDE / build output
+.DS_Store
+.idea/
+dist/
