@@ -4,7 +4,8 @@
 
 Learn micro-frontends and Webpack 5 Module Federation (MF) by building a small
 marketplace incrementally. Each iteration (see `ROADMAP.md`) isolates one challenge:
-reproduce it → solve it → document trade-offs and interview angles.
+solve it → walk through how it works, what can go wrong and how to fix it → document
+trade-offs and interview angles. Problems are explained, not reproduced as broken commits.
 
 Non-goals: a polished product, a design system, a full E2E (end-to-end) test suite,
 cross-framework micro-frontends, a polyrepo setup.
@@ -156,21 +157,28 @@ apps/catalog/
 
 ## 7. Shared dependencies policy
 
-Baseline (finalized in iter 1, extended by later iterations):
+Policy finalized in iter 1 ([ADR 0005](decisions/0005-shared-dependencies-policy.md)),
+extended by later iterations:
 
-| Package | singleton | requiredVersion | eager | Why |
-|---|---|---|---|---|
-| react | ✅ | from package.json | ❌ | hooks break with two copies |
-| react-dom | ✅ | from package.json | ❌ | must match react |
-| react-router-dom | ✅ | from package.json | ❌ | router context must be single (iter 3) |
-| @tanstack/react-query | ✅ | from package.json | ❌ | one QueryClient context (iter 5) |
-| zustand | ✅ | from package.json | ❌ | store identity (iter 5) |
-| i18next, react-i18next | ✅ | from package.json | ❌ | one i18n instance (iter 7) |
+| Package | singleton | requiredVersion | strictVersion | eager | Why |
+|---|---|---|---|---|---|
+| react | ✅ | `^` + installed version | ❌ (warn) | ❌ | hooks break with two copies |
+| react-dom | ✅ | `^` + installed version | ❌ (warn) | ❌ | must match react |
+| react-router-dom | ✅ | `^` + installed version | ❌ (warn) | ❌ | router context must be single (iter 3) |
+| @tanstack/react-query | ✅ | `^` + installed version | ❌ (warn) | ❌ | one QueryClient context (iter 5) |
+| zustand | ✅ | `^` + installed version | ❌ (warn) | ❌ | store identity (iter 5) |
+| i18next, react-i18next | ✅ | `^` + installed version | ❌ (warn) | ❌ | one i18n instance (iter 7) |
 
 Rules:
+- Every option is written explicitly in each `webpack.config.js`. `requiredVersion` is
+  `` `^${require('<pkg>/package.json').version}` ``: webpack cannot infer it from `"catalog:"`
+  and infers `*` for requests made from inside a package.
+- Versions are aligned at build time with the pnpm catalog in `pnpm-workspace.yaml`; every app
+  uses `"<pkg>": "catalog:"` for shared and build-toolchain dependencies.
+- No `eager` and async bootstrap everywhere (section 6).
 - Utility libraries (lodash, date-fns, etc.) are **not shared** by default: shared modules
   are not tree-shaken, so sharing a big utility lib can cost more than duplicating the parts used.
-- `strictVersion` policy is decided in iter 1 (ADR).
+- Dev-only `window.__mfDebug()` in shell prints the share scope (package, version, provider, loaded).
 
 ## 8. State model (summary, detailed in iter 5)
 

@@ -9,17 +9,17 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@swc/core": "^1.16.18",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "html-webpack-plugin": "^5.6.8",
-    "swc-loader": "^0.2.7",
-    "webpack": "^5.111.1",
-    "webpack-cli": "^7.2.3",
-    "webpack-dev-server": "^6.0.0"
+    "@swc/core": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "html-webpack-plugin": "catalog:",
+    "swc-loader": "catalog:",
+    "webpack": "catalog:",
+    "webpack-cli": "catalog:",
+    "webpack-dev-server": "catalog:"
   }
 }

@@ -1,9 +1,10 @@
 # CLAUDE.md — Agent entry point
 
 This repo is a **learning project**: an iterative micro-frontends demo built with
-**Webpack 5 classic Module Federation (MF)**. Every iteration reproduces one real-world
-micro-frontend challenge and then solves it. The goal is understanding and
-interview-ready explanations, not feature completeness.
+**Webpack 5 classic Module Federation (MF)**. Every iteration solves one real-world
+micro-frontend challenge and then walks the user through how the solution works, what can
+go wrong and how to fix it. The goal is understanding and interview-ready explanations,
+not feature completeness.
 
 ## Project documentation location
 
@@ -15,7 +16,7 @@ except a short README per package when needed).
 ```
 docs/
 ├─ SPEC.md          # architecture, stack, conventions — source of truth
-├─ ROADMAP.md       # iterations: goal, reproduce, scope, acceptance criteria
+├─ ROADMAP.md       # iterations: goal, scope, problems to explain, acceptance criteria
 ├─ PROGRESS.md      # session log, current iteration pointer
 ├─ decisions/       # ADRs: NNNN-title.md (template: 0000-template.md)
 └─ notes/           # per-iteration learning notes: NN-slug.md (template: _template.md)
@@ -35,9 +36,12 @@ If the user names a different iteration than PROGRESS.md, follow the user, and s
 
 - **One iteration per session.** Do not implement anything listed for a later iteration,
   even if it looks easy. If the current task truly needs it, stop and ask.
-- **Reproduce first, then fix.** For every iteration with a "Reproduce" block:
-  build the broken state, confirm the failure (error text, screenshot description,
-  network observation), commit it, tag `iter-NN-problem`. Then implement the fix.
+- **Solve, then walk through.** Implement the solution from the iteration's Scope. Then walk
+  the user through how it works and every item of the iteration's "Problems" block:
+  scenario → symptom (exact error text) → root cause → ways to fix. Do not build broken
+  states, `repro` commits or problem tags. A short local experiment that is never committed
+  is fine when an exact error text or behavior must be confirmed. Record the walkthrough in
+  the iteration notes.
 - **Stay inside the stack** from `docs/SPEC.md`. A new dependency or a deviation
   needs an ADR in `docs/decisions/` and a line in PROGRESS.md.
 - **Explicit over magic.** No generators that hide Webpack/MF config. The learner must
@@ -61,9 +65,8 @@ If the user names a different iteration than PROGRESS.md, follow the user, and s
 ## Git
 
 - Branch per iteration: `iter/NN-slug` (e.g. `iter/05-state`), merged to `main` when done.
-- Conventional Commits: `feat(catalog): ...`, `fix(shell): ...`, `docs: ...`, `repro(cart): ...`
-  (`repro` = commit that intentionally reproduces a problem).
-- Tags: `iter-NN-problem` (broken state reproduced), `iter-NN-done` (solution).
+- Conventional Commits: `feat(catalog): ...`, `fix(shell): ...`, `docs: ...`, `chore: ...`.
+- Tags: `iter-NN-done` (solution).
 
 ## Language
 

@@ -3,3 +3,16 @@ packages:
   - apps/widgets/*
   - services/*
   - packages/*
+
+# One version per dependency for the whole workspace (`"react": "catalog:"` in package.json).
+catalog:
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  '@types/react': ^19.3.0
+  '@types/react-dom': ^19.3.0
+  '@swc/core': ^1.16.18
+  html-webpack-plugin: ^5.6.8
+  swc-loader: ^0.2.7
+  webpack: ^5.111.1
+  webpack-cli: ^7.2.3
+  webpack-dev-server: ^6.0.0

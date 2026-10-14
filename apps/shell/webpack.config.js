@@ -2,6 +2,11 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
 
+// pnpm catalogs leave "catalog:" in package.json, which is not a semver range, so webpack
+// cannot infer requiredVersion from it. Take the installed version instead.
+const reactVersion = require('react/package.json').version;
+const reactDomVersion = require('react-dom/package.json').version;
+
 module.exports = {
   entry: './src/index.ts',
   output: {
@@ -37,7 +42,14 @@ module.exports = {
         catalog: 'catalog@http://localhost:3001/remoteEntry.js',
         cart: 'cart@http://localhost:3002/remoteEntry.js',
       },
-      shared: { react: {}, 'react-dom': {} },
+      shared: {
+        react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
+        'react-dom': {
+          singleton: true,
+          requiredVersion: `^${reactDomVersion}`,
+          strictVersion: false,
+        },
+      },
     }),
     new HtmlWebpackPlugin({ template: './public/index.html' }),
   ],

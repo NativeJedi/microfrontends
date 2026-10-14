@@ -4,6 +4,39 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@swc/core':
+      specifier: ^1.16.18
+      version: 1.16.18
+    '@types/react':
+      specifier: ^19.3.0
+      version: 19.3.0
+    '@types/react-dom':
+      specifier: ^19.3.0
+      version: 19.3.0
+    html-webpack-plugin:
+      specifier: ^5.6.8
+      version: 5.6.8
+    react:
+      specifier: ^19.3.0
+      version: 19.3.0
+    react-dom:
+      specifier: ^19.3.0
+      version: 19.3.0
+    swc-loader:
+      specifier: ^0.2.7
+      version: 0.2.7
+    webpack:
+      specifier: ^5.111.1
+      version: 5.111.1
+    webpack-cli:
+      specifier: ^7.2.3
+      version: 7.2.3
+    webpack-dev-server:
+      specifier: ^6.0.0
+      version: 6.0.0
+
 importers:
 
   .:
@@ -39,103 +72,103 @@ importers:
   apps/cart:
     dependencies:
       react:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       react-dom:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@swc/core':
-        specifier: ^1.16.18
+        specifier: 'catalog:'
         version: 1.16.18
       '@types/react':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
       html-webpack-plugin:
-        specifier: ^5.6.8
+        specifier: 'catalog:'
         version: 5.6.8(webpack@5.111.1)
       swc-loader:
-        specifier: ^0.2.7
+        specifier: 'catalog:'
         version: 0.2.7(@swc/core@1.16.18)(webpack@5.111.1)
       webpack:
-        specifier: ^5.111.1
+        specifier: 'catalog:'
         version: 5.111.1(@swc/core@1.16.18)(webpack-cli@7.2.3)
       webpack-cli:
-        specifier: ^7.2.3
+        specifier: 'catalog:'
         version: 7.2.3(js-yaml@4.3.2)(json5@2.2.3)(webpack-dev-server@6.0.0)(webpack@5.111.1)
       webpack-dev-server:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(webpack-cli@7.2.3)(webpack@5.111.1)
 
   apps/catalog:
     dependencies:
       react:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       react-dom:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@swc/core':
-        specifier: ^1.16.18
+        specifier: 'catalog:'
         version: 1.16.18
       '@types/react':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
       html-webpack-plugin:
-        specifier: ^5.6.8
+        specifier: 'catalog:'
         version: 5.6.8(webpack@5.111.1)
       swc-loader:
-        specifier: ^0.2.7
+        specifier: 'catalog:'
         version: 0.2.7(@swc/core@1.16.18)(webpack@5.111.1)
       webpack:
-        specifier: ^5.111.1
+        specifier: 'catalog:'
         version: 5.111.1(@swc/core@1.16.18)(webpack-cli@7.2.3)
       webpack-cli:
-        specifier: ^7.2.3
+        specifier: 'catalog:'
         version: 7.2.3(js-yaml@4.3.2)(json5@2.2.3)(webpack-dev-server@6.0.0)(webpack@5.111.1)
       webpack-dev-server:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(webpack-cli@7.2.3)(webpack@5.111.1)
 
   apps/shell:
     dependencies:
       react:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       react-dom:
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@swc/core':
-        specifier: ^1.16.18
+        specifier: 'catalog:'
         version: 1.16.18
       '@types/react':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
       html-webpack-plugin:
-        specifier: ^5.6.8
+        specifier: 'catalog:'
         version: 5.6.8(webpack@5.111.1)
       swc-loader:
-        specifier: ^0.2.7
+        specifier: 'catalog:'
         version: 0.2.7(@swc/core@1.16.18)(webpack@5.111.1)
       webpack:
-        specifier: ^5.111.1
+        specifier: 'catalog:'
         version: 5.111.1(@swc/core@1.16.18)(webpack-cli@7.2.3)
       webpack-cli:
-        specifier: ^7.2.3
+        specifier: 'catalog:'
         version: 7.2.3(js-yaml@4.3.2)(json5@2.2.3)(webpack-dev-server@6.0.0)(webpack@5.111.1)
       webpack-dev-server:
-        specifier: ^6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(webpack-cli@7.2.3)(webpack@5.111.1)
 
 packages:

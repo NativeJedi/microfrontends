@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 01 — Shared dependencies and versioning (`todo`)
+**Current iteration:** 02 — Types for remotes (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -10,7 +10,7 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ### YYYY-MM-DD — Iteration NN — Title
 - Status: done | in progress | blocked
 - Done: <what was built, 3–6 bullets>
-- Reproduced: <errors observed, exact text>
+- Walkthrough: <problems explained to the user, see notes>
 - Decisions: <ADR links>
 - Deviations from SPEC/ROADMAP: <none | what and why>
 - Known issues / tech debt: <...>
@@ -19,6 +19,25 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-14 — Iteration 01 — Shared dependencies and versioning
+- Status: done
+- Done:
+  - Process change (user request): no reproduce commits / problem tags; solve, then walk through the
+    "Problems" block. CLAUDE.md, SPEC section 1, ROADMAP, notes and PROGRESS templates updated.
+  - pnpm catalog in `pnpm-workspace.yaml`; all apps use `catalog:` for React, types and build toolchain.
+  - `react` / `react-dom`: `singleton: true`, explicit `requiredVersion: ^<installed>`, `strictVersion: false`.
+  - Dev-only `window.__mfDebug()` in shell: shows one React 19.3.0 provided by shell and loaded.
+- Walkthrough: two React copies, version mismatch (strict vs non-strict, singleton vs not), missing async
+  bootstrap — exact error texts confirmed by local uncommitted experiments, see `docs/notes/01-shared-deps.md`.
+- Decisions: [ADR 0005 — shared dependencies policy](decisions/0005-shared-dependencies-policy.md)
+- Deviations from SPEC/ROADMAP: `requiredVersion` is taken from the installed package, not from
+  `package.json` (`catalog:` is not a semver range). ROADMAP problem 3 reworded: the eager-consumption
+  error comes from a missing async bootstrap; `eager: true` hides it.
+- Known issues / tech debt: no error boundary, so a strict mismatch or a broken remote blanks the shell
+  (iteration 09); mismatch warnings only in console (iteration 14).
+- Next session starts with: iteration 02 — branch `iter/02-remote-types`; implement approach A
+  (types exported from catalog/cart packages, consumed by shell via `paths`).
 
 ### 2026-10-14 — Iteration 00 — Skeleton
 - Status: done

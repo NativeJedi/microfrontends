@@ -1,8 +1,10 @@
 # ROADMAP
 
-Each iteration: **Reproduce** the problem → **Solve** it within **Scope** → verify
-**Acceptance criteria** → write notes. Challenge numbers (#N) refer to the original
-challenge list. Agents read the overview and **only the current iteration's section**.
+Each iteration: **Solve** the challenge within **Scope** → verify **Acceptance criteria** →
+**walk the user through** how it works and each item of **Problems** (scenario → symptom →
+root cause → fix) → write notes. Problems are explained, not reproduced as broken commits
+(see CLAUDE.md working rules). Challenge numbers (#N) refer to the original challenge list.
+Agents read the overview and **only the current iteration's section**.
 
 Status values: `todo` · `in progress` · `done` · `blocked`
 
@@ -11,7 +13,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | # | Iteration | Challenge | Status |
 |---|---|---|---|
 | 00 | Skeleton | — | done |
-| 01 | Shared dependencies and versioning | #2 | todo |
+| 01 | Shared dependencies and versioning | #2 | done |
 | 02 | Types for remotes | #4 | todo |
 | 03 | Routing | #5 | todo |
 | 04 | Contracts between micro-frontends | #3 | todo |
@@ -66,13 +68,13 @@ started by one command.
 
 **Goal:** understand how the share scope negotiates versions and lock a safe policy.
 
-**Reproduce** (each as a separate `repro` commit, all before `iter-01-problem`)
-1. Remove `react` from `shared` in `cart` and use a hook inside `CartWidget` → "Invalid hook call"
+**Problems**
+1. `react` not in `shared` of `cart` and a hook inside `CartWidget` → "Invalid hook call"
    (two React copies).
-2. Give `cart` a different React version than shell → observe which version is loaded and
-   who provided it (highest compatible version wins).
-3. Set `eager: true` on react in shell **and** remove async bootstrap → see the eager
-   consumption error; restore bootstrap and explain why it fixes it.
+2. `cart` has a different React version than shell → which version is loaded and who
+   provided it (highest compatible version wins; singleton vs non-singleton).
+3. No async bootstrap → "Shared module is not available for eager consumption"; why
+   `eager: true` also silences it and why async bootstrap is the better fix.
 
 **Scope**
 - Final config: `singleton: true` + `requiredVersion` (read from each app's package.json)
@@ -85,7 +87,7 @@ started by one command.
 - Update SPEC section 7 with the final policy.
 
 **Acceptance criteria**
-- All three failures reproduced and described in notes (exact error text).
+- All three problems explained in notes (scenario, exact error text, root cause, fix).
 - After the fix: one React instance across shell/catalog/cart, confirmed by the debug helper.
 - Mismatched version produces a visible console warning, behavior documented for
   `strictVersion` true vs false.
@@ -100,8 +102,8 @@ started by one command.
 
 **Goal:** a breaking change in a remote's exposed props is caught by `pnpm typecheck` in the host.
 
-**Reproduce:** with the `declare module 'catalog/*'` stub, change `ProductList` props in catalog →
-shell compiles and fails at runtime. Commit, tag.
+**Problems:** with the `declare module 'catalog/*'` stub, change `ProductList` props in catalog →
+shell compiles and fails at runtime.
 
 **Scope** — compare two approaches, implement A, prototype B on a branch:
 - **A. Monorepo types:** exposed module types published from the remote package
@@ -136,7 +138,7 @@ shell compiles and fails at runtime. Commit, tag.
 - Cross-app navigation (catalog → cart) uses route constants, not string literals.
 - `historyApiFallback` so deep links survive refresh.
 
-**Reproduce**
+**Problems**
 1. `react-router-dom` not shared → "useNavigate() may be used only in the context of a <Router>".
 2. Remote renders its own `BrowserRouter` inside the host → two histories, back button desync.
 
@@ -154,7 +156,7 @@ shell compiles and fails at runtime. Commit, tag.
 
 **Goal:** remotes evolve independently without breaking the host at runtime.
 
-**Reproduce:** run shell against catalog from another branch/port where an exposed prop is
+**Problems:** run shell against catalog from another branch/port where an exposed prop is
 renamed (simulates an independent deploy) → runtime break even though each app typechecks.
 
 **Scope**
@@ -194,7 +196,7 @@ consumer-driven contracts.
   - **A.** store module exposed via MF from shell (`shell/store`), instance identity by module;
   - **B.** `packages/store` workspace package shared as MF singleton.
 
-**Reproduce**
+**Problems**
 1. react-query not shared → "No QueryClient set" or two caches with duplicate requests.
 2. Store package imported but not shared → each app has its own store; header counter stuck at 0.
 
@@ -213,7 +215,7 @@ risks of a shared store (ownership, coupling); alternatives (custom events, Broa
 
 ## 06 — Style isolation (#6)
 
-**Reproduce:** catalog adds a global reset and `.button` class, cart has its own `.button` →
+**Problems:** catalog adds a global reset and `.button` class, cart has its own `.button` →
 result depends on load order; styles of an unmounted remote stay in `<head>`.
 
 **Scope**
@@ -234,7 +236,7 @@ result depends on load order; styles of an unmounted remote stay in `<head>`.
 
 ## 07 — i18n (#8)
 
-**Reproduce:** every app calls `i18next.init` → the last one wins (language/resources reset);
+**Problems:** every app calls `i18next.init` → the last one wins (language/resources reset);
 a remote fetches its locales from the host origin → 404.
 
 **Scope**
@@ -255,7 +257,7 @@ a remote fetches its locales from the host origin → 404.
 
 ## 08 — Auth and session (#12)
 
-**Reproduce:** each app has its own fetch with its own refresh → three parallel 401s trigger three
+**Problems:** each app has its own fetch with its own refresh → three parallel 401s trigger three
 refreshes → refresh token rotation invalidates the session; logout in one tab leaves another tab logged in.
 
 **Scope**
@@ -280,7 +282,7 @@ different origins/subdomains.
 
 ## 09 — Resilience + manual dynamic remote loading (#10)
 
-**Reproduce:** stop the cart dev server → shell fails entirely (static remote import).
+**Problems:** stop the cart dev server → shell fails entirely (static remote import).
 
 **Scope**
 - `packages/mf-runtime`: `loadRemote(scope, module)` implemented by hand — inject script,
@@ -314,7 +316,7 @@ different origins/subdomains.
 - One share scope across all three levels; dashboard declares the same singletons.
 - Each widget: own error boundary + timeout. Widgets use the shared `QueryClient`.
 
-**Reproduce**
+**Problems**
 1. dashboard bundles its own React → invalid hook call inside widgets only.
 2. One widget throws → whole dashboard crashes.
 3. Widget URLs hardcoded → adding a widget requires a dashboard rebuild.
@@ -350,7 +352,7 @@ who owns layout and settings.
 
 ## 12 — Independent deployment (#13)
 
-**Reproduce:** deploy a new remote while `remoteEntry.js` is long-cached → users get a stale entry
+**Problems:** deploy a new remote while `remoteEntry.js` is long-cached → users get a stale entry
 pointing to deleted chunks → `ChunkLoadError`.
 
 **Scope**
