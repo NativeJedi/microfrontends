@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 05 — State: TanStack Query + Zustand (`todo`)
+**Current iteration:** 06 — Style isolation (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,34 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-15 — Iteration 05 — State: TanStack Query + Zustand
+- Status: done
+- Done:
+  - `services/api` (NestJS, in-memory, :4000): products and orders endpoints, CORS for :3000–3003 with credentials;
+    runs in `pnpm dev` / `pnpm build`.
+  - `@tanstack/react-query` MF singleton in all apps; one `QueryClient` in shell `bootstrap.tsx`, standalone
+    bootstraps create their own. `@mf/contracts/src/api.ts`: API types, `productKeys`/`orderKeys`, `queryOptions`
+    factories with `staleTime`. Mock data removed from catalog, cart and account.
+  - Cart store (Zustand + `persist` to `cart:items`) owned by cart, exposed as `cart/store` (`addToCart`,
+    `useCartQuantity`); catalog consumes it (`remotes: { cart }`); `CartWidget` = header counter + mini-cart.
+  - Place order in cart → `invalidateQueries(orderKeys.all)` → account orders refetch on mount.
+  - Verified in the browser: instant header counter, one `GET /products` across catalog ↔ cart, new order in account
+    without reload, cart survives refresh, one react-query in `__mfDebug()`, standalone remotes, clean console.
+- Walkthrough: react-query not shared (`No QueryClient set, use QueryClientProvider to set one`, confirmed), store module
+  not shared (confirmed via a direct file import: "(2 in cart)" vs "Cart (0)"), host client defaults, remote → remote
+  dependency, localStorage per origin — see `docs/notes/05-state.md`.
+- Decisions: [ADR 0009 — cart store exposed by its owner](decisions/0009-cart-store-exposed-by-owner.md); ADR 0003 updated.
+- Deviations from SPEC/ROADMAP: option C (user decision) instead of A/B — cart owns and exposes the store; `zustand`
+  removed from the shared table (only cart imports it); the header counter is cart's `CartWidget`; contracts hold
+  `queryOptions` factories in addition to key factories; API request body narrowed by hand instead of
+  class-validator (no extra dependency); `turbo.json` `types` depends on `^types`.
+- Known issues / tech debt: catalog imports `cart/store` statically — cart down breaks catalog (iteration 09);
+  API responses are typed, not validated; API base URL is a constant in contracts (iteration 13); persisted cart is not
+  synced across tabs.
+- Versions: `@tanstack/react-query` 5.104.3, `zustand` 5.0.15 (pnpm catalog); `@nestjs/common`/`core`/`platform-express`
+  12.1.3, `@nestjs/cli` 12.0.8, `reflect-metadata` 0.2.2, `rxjs` 7.8.2, `@types/node` 24.19.2 (api only).
+- Next session starts with: iteration 06 — style isolation.
 
 ### 2026-10-15 — Iteration 04 — Contracts between micro-frontends
 - Status: done

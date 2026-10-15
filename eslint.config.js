@@ -10,6 +10,7 @@ module.exports = tseslint.config(
   tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
+    ignores: ['services/**'],
     plugins: { react: reactPlugin, 'react-hooks': reactHooks },
     languageOptions: { globals: globals.browser },
     settings: { react: { version: 'detect' } },
@@ -18,6 +19,10 @@ module.exports = tseslint.config(
       ...reactPlugin.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
     },
+  },
+  {
+    files: ['services/**/*.ts'],
+    languageOptions: { globals: globals.node },
   },
   {
     files: ['**/*.js'],

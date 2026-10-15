@@ -9,6 +9,7 @@
       "outputs": ["dist/**"]
     },
     "types": {
+      "dependsOn": ["^types"],
       "outputs": ["types/**"]
     },
     "typecheck": {

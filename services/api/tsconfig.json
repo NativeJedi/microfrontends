@@ -1,0 +1,20 @@
+{
+  // Node.js service: CommonJS output (package.json has no "type": "module") and legacy decorators with
+  // metadata, which NestJS dependency injection needs.
+  // Does not extend tsconfig.base.json (browser libs, bundler resolution, noEmit).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}

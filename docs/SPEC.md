@@ -17,9 +17,9 @@ built from independently deployed widgets.
 
 | App | Path | Role | Dev port | Container name | Exposes (planned) | Introduced in |
 |---|---|---|---|---|---|---|
-| shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | (store/session, decided in iter 5/8) | 00 |
-| catalog | `apps/catalog` | Remote: product list and product details | 3001 | `catalog` | `./App` (routes; `./ProductList` until iter 3) | 00 |
-| cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./App`, `./CartWidget` | 00 |
+| shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | (session, iter 8) | 00 |
+| catalog | `apps/catalog` | Remote: product list and product details (consumes `cart/store`) | 3001 | `catalog` | `./App` (routes; `./ProductList` until iter 3) | 00 |
+| cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./App`, `./CartWidget`, `./store` | 00 |
 | account | `apps/account` | Remote: profile, order history | 3003 | `account` | `./App` | 03 |
 | dashboard | `apps/dashboard` | Remote for shell **and** host for widgets | 3004 | `dashboard` | `./App` | 10 |
 | widget-sales | `apps/widgets/sales` | Remote widget | 3011 | `widget_sales` | `./Widget` | 10 |
@@ -66,7 +66,8 @@ Ownership rules:
 - **shell** owns: URL/history, top-level layout, auth session, QueryClient instance,
   i18n instance, theme, Sentry init. Remotes never create these when hosted.
 - **Remotes** own: their routes below their prefix, their UI, their translations,
-  their query hooks (using shared key factories).
+  their query hooks (using shared query options from `@mf/contracts`), and the client state of their domain
+  (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - **dashboard** owns widget layout and widget loading; widget URLs come from the API registry.
 
 ## 4. Tech stack
@@ -85,7 +86,7 @@ pnpm catalogs (from iter 1).
 | UI | React + TypeScript (strict) | |
 | Routing | React Router 8, package `react-router` (declarative mode) | iter 3, [ADR 0007](decisions/0007-react-router-8.md) |
 | Server state | TanStack Query | single `QueryClient` from shell, iter 5 |
-| Client shared state | Zustand | iter 5 |
+| Client shared state | Zustand | iter 5, store exposed by its owner ([ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)) |
 | Styles | CSS Modules + CSS custom properties (tokens) | iter 6 |
 | i18n (internationalization) | i18next + react-i18next | iter 7 |
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
@@ -113,7 +114,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 ├─ services/
 │  └─ api/
 ├─ packages/            # created only by the iteration that needs them
-│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events; iter 5: query keys
+│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events; iter 5: API types, query keys/options
 │  ├─ tokens/           # iter 6: CSS custom properties
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
@@ -181,6 +182,18 @@ apps/catalog/
 - Workspace packages such as `@mf/contracts` export TypeScript source and are bundled into each app; they are
   not MF-shared unless they hold state.
 
+### State (iter 5, [notes](notes/05-state.md))
+- One `QueryClient`, created in the shell's `bootstrap.tsx`; `@tanstack/react-query` is an MF singleton. Remotes
+  create a client only in their standalone `bootstrap.tsx`, never in `exposed/`.
+- `@mf/contracts` holds API types, query key factories (`productKeys`, `orderKeys`) and `queryOptions` factories
+  (`productQueries`, `orderQueries`): key, fetcher, response type and `staleTime` travel together. Query keys are a
+  cross-app contract (renaming one is a breaking change). Cache settings live in the query options, not in
+  `QueryClient` defaults, so a remote caches the same way hosted and standalone.
+- Mutations invalidate by the owner's key factory (`orderKeys.all`); other apps refetch on their next mount.
+- Shared client state is owned by the app of its domain and exposed as functions (`cart/store`: `addToCart`,
+  `useCartQuantity`), never as the raw store. Persisted keys are prefixed with the owner (`cart:items`) and the
+  persisted value is narrowed on load (`localStorage` is untrusted).
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -198,7 +211,6 @@ extended by later iterations:
 | react-dom | ✅ | `^` + installed version | ❌ (warn) | ❌ | must match react |
 | react-router | ✅ | `^` + installed version | ❌ (warn) | ❌ | router context must be single (iter 3) |
 | @tanstack/react-query | ✅ | `^` + installed version | ❌ (warn) | ❌ | one QueryClient context (iter 5) |
-| zustand | ✅ | `^` + installed version | ❌ (warn) | ❌ | store identity (iter 5) |
 | i18next, react-i18next | ✅ | `^` + installed version | ❌ (warn) | ❌ | one i18n instance (iter 7) |
 
 Rules:
@@ -210,14 +222,16 @@ Rules:
 - No `eager` and async bootstrap everywhere (section 6).
 - Utility libraries (lodash, date-fns, etc.) are **not shared** by default: shared modules
   are not tree-shaken, so sharing a big utility lib can cost more than duplicating the parts used.
+- Store libraries are not shared: store identity comes from the owner's exposed module (`cart/store`), and only the
+  owner imports `zustand` (iter 5, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - Dev-only `window.__mfDebug()` in shell prints the share scope (package, version, provider, loaded).
 
-## 8. State model (summary, detailed in iter 5)
+## 8. State model (iter 5, [notes](notes/05-state.md))
 
 | Kind | Tool | Owner |
 |---|---|---|
-| Server state / cache (products, orders, widgets data) | TanStack Query, single `QueryClient` | created by shell; query key factories in `packages/contracts` |
-| Client shared state (cart items, mini-cart open, session snapshot) | Zustand, single store instance | decided in iter 5 (ADR) |
+| Server state / cache (products, orders, widgets data) | TanStack Query, single `QueryClient` | shell creates the client; key factories and query options in `packages/contracts`; data owned by the API |
+| Client shared state (cart items, mini-cart open; session snapshot in iter 8) | Zustand, one instance in the owner's container | owner app exposes functions: cart → `cart/store`; shell → session (iter 8) |
 | Local UI state | `useState` / `useReducer` | each component |
 
 ## 9. Environments and config

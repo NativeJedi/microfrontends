@@ -1,6 +1,6 @@
 # 0003 — Server state in TanStack Query, shared client state in Zustand
 
-- Status: accepted (store sharing mechanism decided in iteration 05)
+- Status: accepted (store sharing mechanism: [ADR 0009](0009-cart-store-exposed-by-owner.md))
 - Date: 2026-10-14
 - Iteration: 05
 
@@ -19,6 +19,7 @@ Option 1. One `QueryClient` created by shell; query key factories in `packages/c
 Zustand for cart items and UI flags.
 
 ## Consequences
-- `@tanstack/react-query` and `zustand` must be MF singletons.
+- `@tanstack/react-query` must be an MF singleton. `zustand` is not shared: store identity comes from the
+  owner's exposed module (ADR 0009).
 - Query keys are part of the public contract — changing them is a breaking change.
-- Open: how the Zustand store instance is shared (MF expose vs shared package) — iteration 05.
+- Store sharing: the owner app exposes a narrow API (`cart/store`) — [ADR 0009](0009-cart-store-exposed-by-owner.md).

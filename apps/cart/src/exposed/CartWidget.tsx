@@ -1,16 +1,27 @@
-import { ROUTES } from '@mf/contracts';
-import { Link } from 'react-router';
-import { cartItems, getTotalQuantity } from '../cart-items';
+import { selectItemCount, useCartStore } from '../cart-store';
+import MiniCart from '../mini-cart/MiniCart';
 
 export interface CartWidgetProps {
   label: string;
 }
 
-// Mini-cart for the shell header: rendered inside the shell's router, so <Link> works.
+// Header counter and mini-cart for the shell: rendered inside the shell's router and QueryClient.
 export default function CartWidget({ label }: CartWidgetProps) {
+  const itemCount = useCartStore(selectItemCount);
+  const isMiniCartOpen = useCartStore((state) => state.isMiniCartOpen);
+  const setMiniCartOpen = useCartStore((state) => state.setMiniCartOpen);
+
   return (
-    <Link to={ROUTES.cart}>
-      {label} ({getTotalQuantity(cartItems)})
-    </Link>
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        aria-expanded={isMiniCartOpen}
+        aria-controls="mini-cart"
+        onClick={() => setMiniCartOpen(!isMiniCartOpen)}
+      >
+        {label} ({itemCount})
+      </button>
+      {isMiniCartOpen && <MiniCart id="mini-cart" />}
+    </div>
   );
 }

@@ -7,6 +7,7 @@ const { ModuleFederationPlugin } = require('webpack').container;
 const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
 const reactRouterVersion = require('react-router/package.json').version;
+const reactQueryVersion = require('@tanstack/react-query/package.json').version;
 
 module.exports = {
   entry: './src/index.ts',
@@ -44,6 +45,8 @@ module.exports = {
       exposes: {
         './App': './src/exposed/App.tsx',
         './CartWidget': './src/exposed/CartWidget.tsx',
+        // Cart state for other micro-frontends: one instance per page, owned by cart (ADR 0009).
+        './store': './src/exposed/store.ts',
       },
       shared: {
         react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
@@ -56,6 +59,12 @@ module.exports = {
         'react-router': {
           singleton: true,
           requiredVersion: `^${reactRouterVersion}`,
+          strictVersion: false,
+        },
+        // One QueryClient context and one cache: the shell's provider must reach every remote.
+        '@tanstack/react-query': {
+          singleton: true,
+          requiredVersion: `^${reactQueryVersion}`,
           strictVersion: false,
         },
       },
