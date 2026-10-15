@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 .DS_Store
 .idea/
 dist/
+
+# Emitted declarations of exposed modules (remotes)
+apps/*/types

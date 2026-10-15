@@ -16,7 +16,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 01 | Shared dependencies and versioning | #2 | done |
 | 02 | Types for remotes | #4 | done |
 | 03 | Routing | #5 | done |
-| 04 | Contracts between micro-frontends | #3 | todo |
+| 04 | Contracts between micro-frontends | #3 | done |
 | 05 | State: TanStack Query + Zustand | #1 | todo |
 | 06 | Style isolation | #6 | todo |
 | 07 | i18n | #8 | todo |
@@ -24,11 +24,12 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 09 | Resilience + manual dynamic remote loading | #10 | todo |
 | 10 | Nested micro-frontends: dashboard + widgets | new | todo |
 | 11 | Performance | #9 | todo |
-| 12 | Independent deployment | #13 | todo |
-| 13 | Developer Experience | #17 | todo |
-| 14 | Observability | #19 | todo |
-| 15 | SSR (Server-Side Rendering) | #15 | todo |
-| 16 | Bonus: migrate to Module Federation 2.0 | — | todo |
+| 12 | Contract testing | new | todo |
+| 13 | Independent deployment | #13 | todo |
+| 14 | Developer Experience | #17 | todo |
+| 15 | Observability | #19 | todo |
+| 16 | SSR (Server-Side Rendering) | #15 | todo |
+| 17 | Bonus: migrate to Module Federation 2.0 | — | todo |
 
 ---
 
@@ -153,22 +154,25 @@ shell compiles and fails at runtime.
 
 **Goal:** remotes evolve independently without breaking the host at runtime.
 
-**Problems:** run shell against catalog from another branch/port where an exposed prop is
-renamed (simulates an independent deploy) → runtime break even though each app typechecks.
+**Problems:** run shell against a cart deployed from another branch where an exposed prop is renamed (simulates an
+independent deploy) → runtime break even though each app typechecks.
 
-**Scope**
-- `packages/contracts`: props types for every exposed module, route constants, custom event
-  names + payload types, (later) query key factories.
+**Scope** (revised in the iteration session, see PROGRESS)
+- Props types are **owned by the remote**: each remote emits `.d.ts` for its exposes (`types` task) and declares them in
+  its `package.json` `exports`; the host resolves `cart/CartWidget` through the workspace package (no `paths`).
+  Same flow as a polyrepo, where the remote's CI publishes a scoped types package.
+- `packages/contracts`: only cross-app pieces — route constants, custom event names + payload types + typed
+  dispatch/subscribe helpers, (later) query key factories.
 - Compatibility rules in SPEC: additive changes only (new optional props); breaking change →
-  new expose (`./ProductListV2`) kept side by side until consumers migrate; deprecation notes.
-- Dev-only runtime guard at the boundary (validate props/event payloads; zod allowed here).
-- Script `pnpm check:exposes`: loads each remote container (node or jsdom), calls `container.get`
-  for every expose declared in contracts, fails if missing.
-- Demonstrate one non-breaking change and one breaking change done via V2 expose.
+  new expose (`./XV2`) kept side by side until consumers migrate; deprecation notes.
+- No runtime guard between own apps (decided in the session: types + compatibility rules + iterations 09/12 cover it).
+- No V2 demo (decided in the session: the rule is documented, a demo adds nothing MF-specific).
+- Automated contract verification (contract testing, deploy gating) → iteration 12.
 
 **Acceptance criteria**
-- All apps import boundary types only from `packages/contracts`.
-- `pnpm check:exposes` fails when an expose is removed and passes otherwise.
+- Props types of exposed modules reach hosts only through the remote's emitted declarations (`exports`); cross-app
+  events and routes only through `packages/contracts`. No `paths` to remote sources.
+- A breaking change in a remote's exposed props fails the host's `pnpm typecheck`.
 - Rules documented in SPEC section 6.
 
 **Interview angles:** what a contract is in MF; evolving without coordinated deploys;
@@ -347,7 +351,23 @@ who owns layout and settings.
 
 ---
 
-## 12 — Independent deployment (#13)
+## 12 — Contract testing (new)
+
+**Goal:** a deploy (or rollback) of any app is blocked when it breaks a contract another deployed app relies on.
+
+**Problems:** cart is rolled back to a version without an expose (or prop) the shell in production already uses →
+the shell's CI does not run, nothing catches it, the header fails at runtime.
+
+**⚠ Open decision:** to be planned with the user before implementing — tool (Pact message interactions for events
+and exposed modules/props, or alternatives), broker hosting (self-hosted pact-broker in Docker vs PactFlow),
+`record-deployment` / `can-i-deploy` incl. rollbacks, test runner, ordering relative to iteration 13 (deployment).
+
+**Interview angles:** consumer-driven contracts; why a check in the consumer's CI cannot protect from a provider rollback;
+contract testing vs types vs runtime validation.
+
+---
+
+## 13 — Independent deployment (#13)
 
 **Problems:** deploy a new remote while `remoteEntry.js` is long-cached → users get a stale entry
 pointing to deleted chunks → `ChunkLoadError`.
@@ -371,7 +391,7 @@ pointing to deleted chunks → `ChunkLoadError`.
 
 ---
 
-## 13 — Developer Experience (#17)
+## 14 — Developer Experience (#17)
 
 **Scope**
 - `packages/dev-harness`: providers for standalone remotes (Router, QueryClient, i18n, mock auth).
@@ -386,7 +406,7 @@ pointing to deleted chunks → `ChunkLoadError`.
 
 ---
 
-## 14 — Observability (#19)
+## 15 — Observability (#19)
 
 **⚠ Open decision:** Sentry SaaS free tier vs self-hosted compatible alternative (e.g. GlitchTip).
 
@@ -403,7 +423,7 @@ pointing to deleted chunks → `ChunkLoadError`.
 
 ---
 
-## 15 — SSR (Server-Side Rendering) (#15)
+## 16 — SSR (Server-Side Rendering) (#15)
 
 **⚠ Open decision:** research current options first (Webpack 5 + Node federation runtime,
 Modern.js, framework support status) and present them **before** implementing. Agent proposes
@@ -414,13 +434,13 @@ invalidating server-side remote code after a redeploy.
 
 ---
 
-## 16 — Bonus: migrate to Module Federation 2.0
+## 17 — Bonus: migrate to Module Federation 2.0
 
 **Scope**
 - Replace `webpack.container.ModuleFederationPlugin` with `@module-federation/enhanced` (still Webpack).
 - `mf-manifest.json` instead of bare `remoteEntry.js`; runtime plugins (`errorLoadRemote` etc.)
   instead of the hand-written loader; dts plugin instead of the iter 2 solution; devtools instead of
-  the iter 13 override.
+  the iter 14 override.
 - Optional: try Rspack.
 
 **Acceptance criteria**

@@ -15,7 +15,7 @@ Many independently built apps (shell, remotes, widgets) plus shared packages and
 3. **Polyrepo** — the most realistic for independent teams, but too much overhead for a demo.
 
 ## Decision
-Option 1. Independent deployability is simulated by versioned deploys (iteration 12), not by
+Option 1. Independent deployability is simulated by versioned deploys (iteration 13), not by
 separate repos.
 
 ## Consequences

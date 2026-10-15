@@ -2,7 +2,7 @@
   "name": "@mf/contracts",
   "private": true,
   "version": "0.0.0",
-  "description": "Cross-app contracts: route constants (iter 3), props, events, query keys (later).",
+  "description": "Cross-app contracts: route constants and custom events.",
   "exports": {
     ".": "./src/index.ts"
   },

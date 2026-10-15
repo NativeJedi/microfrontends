@@ -1,11 +1,21 @@
 import { ROUTES } from '@mf/contracts';
 import { lazy, Suspense } from 'react';
-import { Navigate, NavLink, Route, Routes } from 'react-router';
+import { Link, Navigate, NavLink, Route, Routes } from 'react-router';
+import { useRecentlyViewedProduct } from './use-recently-viewed-product';
 
 const CatalogApp = lazy(() => import('catalog/App'));
 const CartApp = lazy(() => import('cart/App'));
 const AccountApp = lazy(() => import('account/App'));
 const CartWidget = lazy(() => import('cart/CartWidget'));
+
+function RecentlyViewedLink() {
+  const product = useRecentlyViewedProduct();
+  if (!product) return null;
+
+  return (
+    <Link to={ROUTES.catalog.product(product.productId)}>Recently viewed: {product.name}</Link>
+  );
+}
 
 function Header() {
   return (
@@ -13,8 +23,9 @@ function Header() {
       <h1 style={{ marginRight: 'auto' }}>Marketplace shell</h1>
       <NavLink to={ROUTES.catalog.root}>Catalog</NavLink>
       <NavLink to={ROUTES.account.root}>Account</NavLink>
+      <RecentlyViewedLink />
       <Suspense fallback={<span>Cart…</span>}>
-        <CartWidget />
+        <CartWidget label="Cart" />
       </Suspense>
     </header>
   );

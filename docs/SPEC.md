@@ -79,7 +79,7 @@ pnpm catalogs (from iter 1).
 |---|---|---|
 | Package manager | pnpm workspaces | `.nvmrc` pins Node.js active LTS |
 | Monorepo tasks | Turborepo | `dev`, `build`, `typecheck`, `lint` pipelines |
-| Bundler | Webpack 5 + `webpack.container.ModuleFederationPlugin` (classic) | No `@module-federation/*` packages until iter 16, except where an iteration explicitly allows it |
+| Bundler | Webpack 5 + `webpack.container.ModuleFederationPlugin` (classic) | No `@module-federation/*` packages until iter 17, except where an iteration explicitly allows it |
 | Transpiling | `swc-loader` | Types checked separately with `tsc --noEmit` |
 | Dev server | `webpack-dev-server` | `historyApiFallback: true`, CORS headers for remotes |
 | UI | React + TypeScript (strict) | |
@@ -90,9 +90,9 @@ pnpm catalogs (from iter 1).
 | i18n (internationalization) | i18next + react-i18next | iter 7 |
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
 | Auth | JWT (JSON Web Token) access token in memory + refresh token in httpOnly cookie | iter 8 |
-| Containers | Docker Compose + nginx | iter 12 |
-| CI | GitHub Actions | iter 12 |
-| Observability | Sentry (⚠ open decision in iter 14) | iter 14 |
+| Containers | Docker Compose + nginx | iter 13 |
+| CI | GitHub Actions | iter 13 |
+| Observability | Sentry (⚠ open decision in iter 15) | iter 15 |
 | Lint/format | ESLint (flat config) + Prettier | iter 0 |
 
 Pinned exceptions to "current stable" (ADR 0004): TypeScript `~6.0.3` and ESLint `^9.39` until
@@ -113,10 +113,10 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 ├─ services/
 │  └─ api/
 ├─ packages/            # created only by the iteration that needs them
-│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4+: props, events, query keys
+│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events; iter 5: query keys
 │  ├─ tokens/           # iter 6: CSS custom properties
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
-│  └─ dev-harness/      # iter 13: standalone providers for remotes
+│  └─ dev-harness/      # iter 14: standalone providers for remotes
 ├─ pnpm-workspace.yaml
 ├─ turbo.json
 └─ tsconfig.base.json
@@ -127,7 +127,8 @@ Typical app layout:
 ```
 apps/catalog/
 ├─ webpack.config.js    # explicit, no shared factory until there is a reason
-├─ package.json
+├─ package.json         # remotes: "exports" lists the types of every expose (iter 4)
+├─ tsconfig.types.json  # remotes: emits declarations of src/exposed into types/ (gitignored)
 ├─ tsconfig.json
 ├─ public/index.html
 └─ src/
@@ -147,13 +148,27 @@ apps/catalog/
 - Exposed modules: `./App` for a route-level app, `./Widget` for dashboard widgets,
   other names only for small embeddable pieces (e.g. `./CartWidget`).
 - Exposed React modules use a **default export** (for `React.lazy`). Everything else uses named exports.
-- Breaking changes to an exposed module require a new expose name (`./ProductListV2`)
-  — see contracts rules (iter 4).
-- Types of remote modules (iter 2, [ADR 0006](decisions/0006-remote-types.md)): the host's `tsconfig.json`
-  maps each remote prefix to the remote's exposed sources (`"catalog/*": ["../catalog/src/exposed/*"]`) and the
-  host lists each remote in `devDependencies` as `"<remote>": "workspace:*"` (so Turborepo invalidates the host's
-  typecheck when a remote changes). Props types are named exports next to the exposed component.
-  No ambient `declare module '<remote>/*'` stubs.
+- Types of remote modules (iter 4, [ADR 0008](decisions/0008-contracts-between-micro-frontends.md), supersedes
+  ADR 0006): the **remote owns** the props types of its exposes (named exports next to the default-exported component).
+  Its `types` task (`tsconfig.types.json`) emits declarations of `src/exposed` into `types/`, and its `package.json`
+  `exports` maps every expose to them (`"./CartWidget": { "types": "./types/exposed/CartWidget.d.ts" }`).
+  The host lists each remote as `"<remote>": "workspace:*"` in `devDependencies` and imports `cart/CartWidget`
+  with no `paths`; `typecheck` depends on `^types` in Turborepo. No ambient `declare module '<remote>/*'` stubs.
+
+### Contracts between micro-frontends (iter 4, [notes](notes/04-contracts.md))
+- **Every expose is declared twice and kept in sync:** webpack `exposes` (runtime) and package `exports` (types).
+- **Additive changes only** within one expose / event: new optional props, new optional payload fields, new exposes,
+  new events. Receivers ignore unknown fields.
+- **Breaking change = new name:** a new expose `./XV2` or a new event `<app>:<event>.v2`. The old one stays as a thin
+  adapter over the new one, marked `@deprecated` (JSDoc) with the reason, and is removed only when no deployed host
+  uses it.
+- **No runtime validation between our own apps:** typed exposes and events are trusted like any import; deploy-time
+  mismatches are the job of contract testing (iteration 12) and error boundaries (iteration 09). Validate only untrusted
+  inputs (API responses, cross-origin `postMessage`, third-party code, `localStorage`).
+- **Cross-app events** go through `@mf/contracts` (`MF_EVENTS`, `dispatchMfEvent`, `subscribeToMfEvent`): DOM
+  `CustomEvent` on `window`, name `<owner-app>:<kebab-name>`, the owner is the producer. Events are fire-and-forget
+  (no replay for late subscribers).
+- Automated verification against what is deployed (contract testing, deploy gating) — iteration 12.
 
 ### Routing (iter 3, [notes](notes/03-routing.md))
 - The shell owns the only `<BrowserRouter>` and mounts each remote's `./App` under its prefix with a splat
@@ -209,7 +224,7 @@ Rules:
 
 - Dev: every app on its own port (section 2). Remote URLs: static in shell config until iter 9,
   then runtime `remotes.json` / API registry.
-- From iter 12: one build artifact per app, environment config injected at runtime
+- From iter 13: one build artifact per app, environment config injected at runtime
   (never baked in with build-time env vars).
 - API base URL `http://localhost:4000` in dev. CORS allows the dev ports with credentials.
   Note: cookies are not port-scoped, so all `localhost:*` apps share them.
@@ -221,6 +236,5 @@ Rules:
 | `pnpm dev` | all apps + api |
 | `pnpm dev --filter <app>...` | one app with its workspace deps |
 | `pnpm build` | production build of everything |
-| `pnpm typecheck` | `tsc --noEmit` in every package |
+| `pnpm typecheck` | `tsc --noEmit` in every package (after remotes emit their `types/`) |
 | `pnpm lint` | ESLint everywhere |
-| `pnpm check:exposes` | contract check of remote exposes (from iter 4) |

@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 04 — Contracts between micro-frontends (`todo`)
+**Current iteration:** 05 — State: TanStack Query + Zustand (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,36 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-15 — Iteration 04 — Contracts between micro-frontends
+- Status: done
+- Done:
+  - Remotes own the props types of their exposes: `tsconfig.types.json` + `types` task emit `src/exposed` declarations
+    into `types/` (gitignored); `package.json` `exports` maps every expose. Shell: `paths` removed, imports resolve through
+    the `workspace:*` remote packages. Turbo: `typecheck` → `^types`; `build` no longer depends on `^build`.
+  - cart `./CartWidget` takes a required `label` prop (`CartWidgetProps`); shell passes `label="Cart"`.
+  - `@mf/contracts`: `MF_EVENTS`, `dispatchMfEvent` / `subscribeToMfEvent`, `catalog:product-viewed`
+    (catalog product page → shell "Recently viewed" link).
+  - Verified no remote code in shell's production `dist`.
+  - Verified: browser (cart widget, recently viewed link, standalone remotes, clean console), renaming `label` in cart
+    fails shell typecheck (TS2322), missing `exports` entry → TS2307.
+- Walkthrough: renamed prop with independent deploy, host newer than deployed remote (real
+  `Module "./CartWidgetV2" does not exist in container.` from dev servers started before a new expose), event before
+  subscription, types artifact vs `exports` — see `docs/notes/04-contracts.md`.
+- Decisions: [ADR 0008 — contracts between micro-frontends](decisions/0008-contracts-between-micro-frontends.md)
+  (supersedes ADR 0006).
+- Deviations from SPEC/ROADMAP: props types come from the remote's emitted declarations instead of `packages/contracts`
+  (user decision: types live with the implementation, as in a polyrepo); `pnpm check:exposes` dropped (a script in the
+  consumer's CI cannot catch a provider rollback) — replaced by new iteration 12 "Contract testing" (to be planned);
+  iterations 12–16 renumbered to 13–17; the ROADMAP problem uses cart instead of catalog (catalog's `./App` has no props);
+  the dev-only runtime guard (zod) was built and then removed (user decision): between own apps it only improves the
+  error message for a local mismatch — types, compatibility rules, contract testing (12) and error boundaries (09)
+  cover the risks; runtime validation is kept for untrusted inputs. The V2-expose demo (breaking change via
+  `./CartWidgetV2` + `@deprecated` adapter) was built and removed (user decision: not MF-specific); the rule stays in SPEC.
+- Known issues / tech debt: every expose is listed twice (webpack `exposes` + package `exports`); remotes must run `types`
+  before the IDE sees their declarations in a fresh clone (`pnpm typecheck` does it); a remote change still marks the shell
+  as affected in the monorepo (iteration 13); no error boundary yet (iteration 09).
+- Next session starts with: iteration 05 — present store sharing options A vs B (⚠ open decision) before implementing.
 
 ### 2026-10-15 — Iteration 03 — Routing
 - Status: done
@@ -39,7 +69,7 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
   instead of rendering catalog at `/` (one mount point per remote); links inside remotes use `ROUTES` instead of
   relative paths (splat-route resolution); `/login` and `/dashboard` left for iterations 08 / 10.
 - Known issues / tech debt: no error boundary per route yet (a broken remote blanks the shell — iteration 09);
-  standalone "foreign URL" placeholder duplicated in each remote bootstrap (dev-harness, iteration 13);
+  standalone "foreign URL" placeholder duplicated in each remote bootstrap (dev-harness, iteration 14);
   remotes' standalone `index.html` also includes `remoteEntry.js` as a script (harmless, revisit in iteration 11).
 - Next session starts with: iteration 04 — move boundary types (props) into `@mf/contracts` and define compatibility rules.
 
@@ -58,7 +88,7 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 - Decisions: [ADR 0006 — types for remote modules](decisions/0006-remote-types.md)
 - Deviations from SPEC/ROADMAP: no prototype of approach B (user decision: ready solution + description of
   approaches instead); ROADMAP scope and the open decision rewritten accordingly.
-- Known issues / tech debt: shell build now waits for remote builds (`^build`), and in iteration 12 every remote change
+- Known issues / tech debt: shell build now waits for remote builds (`^build`), and in iteration 13 every remote change
   marks shell as affected — revisit when boundary types move to `packages/contracts` (iteration 04).
 - Next session starts with: iteration 03 — add `apps/account` (:3003) and `react-router-dom` as a singleton.
 
@@ -77,7 +107,7 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
   `package.json` (`catalog:` is not a semver range). ROADMAP problem 3 reworded: the eager-consumption
   error comes from a missing async bootstrap; `eager: true` hides it.
 - Known issues / tech debt: no error boundary, so a strict mismatch or a broken remote blanks the shell
-  (iteration 09); mismatch warnings only in console (iteration 14).
+  (iteration 09); mismatch warnings only in console (iteration 15).
 - Next session starts with: iteration 02 — implement approach A
   (types exported from catalog/cart packages, consumed by shell via `paths`).
 

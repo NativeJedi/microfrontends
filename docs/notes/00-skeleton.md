@@ -83,7 +83,7 @@ for eager consumption" (reproduced on purpose in iteration 01).
 | Explicit `webpack.config.js` per app (chosen) | Every line is readable; each app is independent | Repeated loader/devServer config across apps |
 | Shared webpack config factory | Less duplication | Hides MF config, which is the learning goal |
 | Static remote URLs in shell config (chosen for now) | Simplest possible wiring | Rebuild to change a URL; a down remote breaks the shell (fixed in iteration 09) |
-| `Access-Control-Allow-Origin: *` in dev | Works for any host port | Too open for production; narrowed in iteration 12 |
+| `Access-Control-Allow-Origin: *` in dev | Works for any host port | Too open for production; narrowed in iteration 13 |
 
 ## Interview questions
 - **Q:** What is the difference between host and remote?

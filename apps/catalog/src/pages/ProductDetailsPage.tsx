@@ -1,10 +1,16 @@
-import { ROUTES } from '@mf/contracts';
+import { dispatchMfEvent, MF_EVENTS, ROUTES } from '@mf/contracts';
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import { findProductById } from '../products';
 
 export default function ProductDetailsPage() {
   const { productId = '' } = useParams();
   const product = findProductById(productId);
+
+  useEffect(() => {
+    if (product)
+      dispatchMfEvent(MF_EVENTS.productViewed, { productId: product.id, name: product.name });
+  }, [product]);
 
   if (!product) {
     return (

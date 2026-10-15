@@ -121,7 +121,7 @@ but production runs an older (or newer) catalog.
 | **`paths` → remote source (chosen)** | no build step, instant IDE feedback, go-to-definition into the remote | monorepo only; the host checks the remote's internals too; needs an explicit workspace dependency for caching |
 | `paths` / project references → emitted `.d.ts` | host sees only declarations; looks like a published artifact | task ordering, stale `dist` risk |
 | Types / contracts package (iter 04) | explicit contract, works in a polyrepo via npm | contract and implementation must be kept in sync |
-| Types downloaded from the deployed remote (`@module-federation/dts-plugin`, iter 16) | polyrepo; matches the deployed version | typecheck depends on network and remote availability; more CI setup |
+| Types downloaded from the deployed remote (`@module-federation/dts-plugin`, iter 17) | polyrepo; matches the deployed version | typecheck depends on network and remote availability; more CI setup |
 | Runtime validation (zod, iter 04) | catches drift after independent deploys | runtime cost; complements types, does not replace them |
 
 ## Interview questions

@@ -30,6 +30,6 @@ Option 1 for `react` and `react-dom`, and for every stateful library added later
 
 ## Consequences
 - A version mismatch is visible only in the console. It must be watched in dev and later reported to
-  observability (iteration 14).
+  observability (iteration 15).
 - `strictVersion: true` stays an option for libraries where running a wrong version is worse than not
   rendering, once error boundaries per remote exist (iteration 09).

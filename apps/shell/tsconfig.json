@@ -1,13 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    // Types of remote modules come from the remotes' source (monorepo only), see ADR 0006.
-    // Webpack ignores this: at runtime `catalog/*` is still loaded through Module Federation.
-    "paths": {
-      "catalog/*": ["../catalog/src/exposed/*"],
-      "cart/*": ["../cart/src/exposed/*"],
-      "account/*": ["../account/src/exposed/*"]
-    }
-  },
+  // Types of remote modules come from the remotes' emitted declarations: `cart/CartWidgetV2` resolves through
+  // the `cart` workspace package's "exports" (ADR 0008). Webpack ignores this and loads `cart/*` through
+  // Module Federation at runtime.
   "include": ["src"]
 }

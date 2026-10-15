@@ -1,6 +1,6 @@
 # 0006 — Types for remote modules
 
-- Status: accepted
+- Status: superseded by [0008](0008-contracts-between-micro-frontends.md)
 - Date: 2026-10-15
 - Iteration: 02
 
@@ -23,7 +23,7 @@ Types are erased at compile time and `remoteEntry.js` is plain JavaScript, so ty
    works in a polyrepo; implementation and contract must be kept in sync. Planned for iteration 04.
 5. **Types fetched from the deployed remote** — the remote packs declarations of its exposes, the host downloads
    them by URL (`@module-federation/dts-plugin` or a custom script). Matches the *deployed* version and works in a
-   polyrepo; typecheck depends on network and remote availability. Shown in iteration 16.
+   polyrepo; typecheck depends on network and remote availability. Shown in iteration 17.
 6. **Runtime validation** (zod) at the boundary — catches drift after independent deploys; complements types,
    does not replace them. Iteration 04.
 
@@ -44,6 +44,6 @@ into remote modules before normal module resolution, so the `node_modules/catalo
 - Types are checked against the remote's code **in the repo**, not against what is deployed (build-time vs
   deploy-time drift) — addressed by contracts and runtime validation in iteration 04.
 - `pnpm build` of the shell now waits for the remotes' builds (`^build`); `pnpm dev --filter shell...` also starts
-  catalog and cart. In iteration 12 "affected apps" will treat the shell as affected by every remote change —
+  catalog and cart. In iteration 13 "affected apps" will treat the shell as affected by every remote change —
   revisit when types move to `packages/contracts`.
 - An internal type error in a remote module reachable from its exposes also fails the shell's typecheck.

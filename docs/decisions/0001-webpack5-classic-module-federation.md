@@ -16,8 +16,8 @@ The project exists to learn how Module Federation (MF) works and to explain it i
 3. **Vite + `@module-federation/vite`** — less mature, different mental model.
 
 ## Decision
-Option 1. MF 2.0 is covered as a final bonus migration (iteration 16) to compare both.
+Option 1. MF 2.0 is covered as a final bonus migration (iteration 17) to compare both.
 
 ## Consequences
 - Types, dynamic remotes, error handling and remote overrides are built by hand (iterations 2, 9, 13).
-- No `@module-federation/*` packages before iteration 16, except the iteration 2 prototype.
+- No `@module-federation/*` packages before iteration 17, except the iteration 2 prototype.
