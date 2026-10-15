@@ -1,6 +1,6 @@
 # NN — Title
 
-> Challenge: #N · Tag: `iter-NN-done`
+> Challenge: #N
 
 ## Problem
 What breaks and when it happens in real projects (2–4 sentences).

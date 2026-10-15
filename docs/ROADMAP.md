@@ -14,7 +14,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 |---|---|---|---|
 | 00 | Skeleton | — | done |
 | 01 | Shared dependencies and versioning | #2 | done |
-| 02 | Types for remotes | #4 | todo |
+| 02 | Types for remotes | #4 | done |
 | 03 | Routing | #5 | todo |
 | 04 | Contracts between micro-frontends | #3 | todo |
 | 05 | State: TanStack Query + Zustand | #1 | todo |
@@ -105,15 +105,11 @@ started by one command.
 **Problems:** with the `declare module 'catalog/*'` stub, change `ProductList` props in catalog →
 shell compiles and fails at runtime.
 
-**Scope** — compare two approaches, implement A, prototype B on a branch:
-- **A. Monorepo types:** exposed module types published from the remote package
-  (e.g. `catalog/src/exposed/*.d.ts` via TS project references or a `types` export in
-  package.json), consumed by shell through `paths` mapping `catalog/*`.
-- **B. Generated types from the running remote** (`@module-federation/dts-plugin` or an
-  equivalent script that emits `.d.ts` for exposes and downloads them into the host) — the
-  polyrepo-friendly approach. The `@module-federation` package is allowed here for this prototype only.
-
-**⚠ Open decision:** after the prototype, present A vs B trade-offs; the user picks which stays.
+**Scope**
+- Implement **monorepo types**: the host maps `catalog/*` / `cart/*` to the remotes' `src/exposed/*` with
+  `paths`; exposed components export their props types; remotes are `workspace:*` dev dependencies of the host.
+- Describe (no prototype) the other approaches and their trade-offs in notes and an ADR: emitted `.d.ts`,
+  contracts package, types downloaded from the deployed remote (`@module-federation/dts-plugin`), runtime validation.
 
 **Acceptance criteria**
 - Removing/renaming a required prop in catalog's exposed component fails `pnpm typecheck` in shell.

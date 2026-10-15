@@ -148,6 +148,11 @@ apps/catalog/
 - Exposed React modules use a **default export** (for `React.lazy`). Everything else uses named exports.
 - Breaking changes to an exposed module require a new expose name (`./ProductListV2`)
   — see contracts rules (iter 4).
+- Types of remote modules (iter 2, [ADR 0006](decisions/0006-remote-types.md)): the host's `tsconfig.json`
+  maps each remote prefix to the remote's exposed sources (`"catalog/*": ["../catalog/src/exposed/*"]`) and the
+  host lists each remote in `devDependencies` as `"<remote>": "workspace:*"` (so Turborepo invalidates the host's
+  typecheck when a remote changes). Props types are named exports next to the exposed component.
+  No ambient `declare module '<remote>/*'` stubs.
 
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.

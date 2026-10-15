@@ -39,7 +39,7 @@ If the user names a different iteration than PROGRESS.md, follow the user, and s
 - **Solve, then walk through.** Implement the solution from the iteration's Scope. Then walk
   the user through how it works and every item of the iteration's "Problems" block:
   scenario → symptom (exact error text) → root cause → ways to fix. Do not build broken
-  states, `repro` commits or problem tags. A short local experiment that is never committed
+  states or `repro` commits. A short local experiment that is never committed
   is fine when an exact error text or behavior must be confirmed. Record the walkthrough in
   the iteration notes.
 - **Stay inside the stack** from `docs/SPEC.md`. A new dependency or a deviation
@@ -60,13 +60,15 @@ If the user names a different iteration than PROGRESS.md, follow the user, and s
 - [ ] `docs/SPEC.md` updated if the iteration changed architecture, ports, shared deps policy, or conventions.
 - [ ] Iteration status updated in ROADMAP.md overview table.
 - [ ] New entry on top of `docs/PROGRESS.md`, "Current iteration" line moved forward.
-- [ ] Final commit, tag `iter-NN-done`.
+- [ ] Changes walked through with the user and approved.
+- [ ] One commit for the whole iteration.
 
 ## Git
 
-- Branch per iteration: `iter/NN-slug` (e.g. `iter/05-state`), merged to `main` when done.
-- Conventional Commits: `feat(catalog): ...`, `fix(shell): ...`, `docs: ...`, `chore: ...`.
-- Tags: `iter-NN-done` (solution).
+- **One commit per iteration**, directly on `main`, made **only after** the user has reviewed
+  the changes and approved. Never commit intermediate steps.
+- Message: `feat: iteration NN — <title>` + a short body (Conventional Commits style).
+- No iteration branches, no merge commits, no tags.
 
 ## Language
 

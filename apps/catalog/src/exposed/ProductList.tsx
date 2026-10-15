@@ -4,16 +4,20 @@ interface Product {
   price: number;
 }
 
+export interface ProductListProps {
+  title: string;
+}
+
 const products: Product[] = [
   { id: 'p1', name: 'Mechanical keyboard', price: 89 },
   { id: 'p2', name: 'USB-C hub', price: 39 },
   { id: 'p3', name: 'Standing desk mat', price: 54 },
 ];
 
-export default function ProductList() {
+export default function ProductList({ title }: ProductListProps) {
   return (
     <section style={{ border: '1px solid #ccc', padding: 16 }}>
-      <h2>Catalog</h2>
+      <h2>{title}</h2>
       <ul>
         {products.map((product) => (
           <li key={product.id}>

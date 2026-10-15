@@ -1,6 +1,6 @@
 # 01 — Shared dependencies and versioning
 
-> Challenge: #2 · Tag: `iter-01-done`
+> Challenge: #2
 
 ## Problem
 Every micro-frontend is built separately and bundles its own dependencies. Libraries with

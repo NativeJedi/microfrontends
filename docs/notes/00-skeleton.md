@@ -1,6 +1,6 @@
 # 00 — Skeleton
 
-> Challenge: — · Tags: `iter-00-done` (no `iter-00-problem`: this iteration has no reproduce block)
+> Challenge: —
 
 ## Problem
 Before any micro-frontend challenge can be reproduced, there must be a working baseline: a host

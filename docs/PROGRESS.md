@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 02 — Types for remotes (`todo`)
+**Current iteration:** 03 — Routing (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -20,6 +20,25 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 
 ## Entries
 
+### 2026-10-15 — Iteration 02 — Types for remotes
+- Status: done
+- Done:
+  - catalog's `./ProductList` takes a required `title` prop; `ProductListProps` exported as a named type.
+  - shell `tsconfig.json` `paths`: `catalog/*` → `../catalog/src/exposed/*`, `cart/*` → `../cart/src/exposed/*`;
+    stub `apps/shell/src/remotes.d.ts` deleted.
+  - shell `devDependencies`: `catalog` / `cart` as `workspace:*` so `shell#typecheck` depends on the remotes'
+    typecheck in Turborepo (without it a remote-only change replays a cached green run — confirmed).
+  - Verified: renaming `title` fails `pnpm typecheck` in shell (TS2322), an optional prop passes, no catalog code in
+    the shell bundle, all three apps render in the browser with no console errors.
+- Walkthrough: ambient stub → silent runtime bug; Turborepo cache false green; build-time vs deploy-time drift —
+  see `docs/notes/02-remote-types.md`.
+- Decisions: [ADR 0006 — types for remote modules](decisions/0006-remote-types.md)
+- Deviations from SPEC/ROADMAP: no prototype of approach B (user decision: ready solution + description of
+  approaches instead); ROADMAP scope and the open decision rewritten accordingly.
+- Known issues / tech debt: shell build now waits for remote builds (`^build`), and in iteration 12 every remote change
+  marks shell as affected — revisit when boundary types move to `packages/contracts` (iteration 04).
+- Next session starts with: iteration 03 — add `apps/account` (:3003) and `react-router-dom` as a singleton.
+
 ### 2026-10-14 — Iteration 01 — Shared dependencies and versioning
 - Status: done
 - Done:
@@ -36,7 +55,7 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
   error comes from a missing async bootstrap; `eager: true` hides it.
 - Known issues / tech debt: no error boundary, so a strict mismatch or a broken remote blanks the shell
   (iteration 09); mismatch warnings only in console (iteration 14).
-- Next session starts with: iteration 02 — branch `iter/02-remote-types`; implement approach A
+- Next session starts with: iteration 02 — implement approach A
   (types exported from catalog/cart packages, consumed by shell via `paths`).
 
 ### 2026-10-14 — Iteration 00 — Skeleton

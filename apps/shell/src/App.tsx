@@ -12,7 +12,7 @@ export default function App() {
       <main style={{ display: 'flex', gap: 16 }}>
         <div style={{ flex: 2 }}>
           <Suspense fallback={<p>Loading catalog…</p>}>
-            <ProductList />
+            <ProductList title="Catalog" />
           </Suspense>
         </div>
         <div style={{ flex: 1 }}>
