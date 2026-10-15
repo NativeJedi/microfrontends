@@ -5,7 +5,8 @@
     // Webpack ignores this: at runtime `catalog/*` is still loaded through Module Federation.
     "paths": {
       "catalog/*": ["../catalog/src/exposed/*"],
-      "cart/*": ["../cart/src/exposed/*"]
+      "cart/*": ["../cart/src/exposed/*"],
+      "account/*": ["../account/src/exposed/*"]
     }
   },
   "include": ["src"]

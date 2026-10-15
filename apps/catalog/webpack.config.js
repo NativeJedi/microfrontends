@@ -6,6 +6,7 @@ const { ModuleFederationPlugin } = require('webpack').container;
 // cannot infer requiredVersion from it. Take the installed version instead.
 const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
+const reactRouterVersion = require('react-router/package.json').version;
 
 module.exports = {
   entry: './src/index.ts',
@@ -41,7 +42,7 @@ module.exports = {
       name: 'catalog',
       filename: 'remoteEntry.js',
       exposes: {
-        './ProductList': './src/exposed/ProductList.tsx',
+        './App': './src/exposed/App.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
@@ -50,9 +51,17 @@ module.exports = {
           requiredVersion: `^${reactDomVersion}`,
           strictVersion: false,
         },
+        // One router instance: the shell's <BrowserRouter> context must reach every remote.
+        'react-router': {
+          singleton: true,
+          requiredVersion: `^${reactRouterVersion}`,
+          strictVersion: false,
+        },
       },
     }),
-    new HtmlWebpackPlugin({ template: './public/index.html' }),
+    // Standalone page only: an absolute script URL keeps deep links like /catalog/p1 working
+    // after a refresh. Chunks still use publicPath 'auto' when the shell loads this remote.
+    new HtmlWebpackPlugin({ template: './public/index.html', publicPath: '/' }),
   ],
   devServer: {
     port: 3001,

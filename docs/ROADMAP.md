@@ -15,7 +15,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 00 | Skeleton | — | done |
 | 01 | Shared dependencies and versioning | #2 | done |
 | 02 | Types for remotes | #4 | done |
-| 03 | Routing | #5 | todo |
+| 03 | Routing | #5 | done |
 | 04 | Contracts between micro-frontends | #3 | todo |
 | 05 | State: TanStack Query + Zustand | #1 | todo |
 | 06 | Style isolation | #6 | todo |
@@ -129,13 +129,14 @@ shell compiles and fails at runtime.
 - shell: `BrowserRouter` + top-level routes from SPEC section 2, lazy route per remote.
 - Remotes expose `./App` with **relative** nested `<Routes>`. Remote's own `BrowserRouter`
   only in its standalone bootstrap.
-- `react-router-dom` → singleton (update SPEC section 7).
+- `react-router` (v8; `react-router-dom` has no v8, see ADR 0007) → singleton (update SPEC section 7).
 - Route constants (`ROUTES.cart`, `ROUTES.account.orders`) in a new `packages/contracts`.
 - Cross-app navigation (catalog → cart) uses route constants, not string literals.
 - `historyApiFallback` so deep links survive refresh.
 
 **Problems**
-1. `react-router-dom` not shared → "useNavigate() may be used only in the context of a <Router>".
+1. `react-router` not shared → "useNavigate() may be used only in the context of a <Router>"
+   (a `<Link>` fails earlier with a `TypeError`, see notes).
 2. Remote renders its own `BrowserRouter` inside the host → two histories, back button desync.
 
 **Acceptance criteria**

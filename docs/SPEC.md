@@ -18,8 +18,8 @@ built from independently deployed widgets.
 | App | Path | Role | Dev port | Container name | Exposes (planned) | Introduced in |
 |---|---|---|---|---|---|---|
 | shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | (store/session, decided in iter 5/8) | 00 |
-| catalog | `apps/catalog` | Remote: product list and product details | 3001 | `catalog` | `./ProductList` → later `./App` (routes) | 00 |
-| cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./CartWidget`, later `./App` | 00 |
+| catalog | `apps/catalog` | Remote: product list and product details | 3001 | `catalog` | `./App` (routes; `./ProductList` until iter 3) | 00 |
+| cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./App`, `./CartWidget` | 00 |
 | account | `apps/account` | Remote: profile, order history | 3003 | `account` | `./App` | 03 |
 | dashboard | `apps/dashboard` | Remote for shell **and** host for widgets | 3004 | `dashboard` | `./App` | 10 |
 | widget-sales | `apps/widgets/sales` | Remote widget | 3011 | `widget_sales` | `./Widget` | 10 |
@@ -33,14 +33,15 @@ Container names must be valid JS identifiers (hence `widget_sales`, not `widget-
 
 | URL | Rendered by |
 |---|---|
-| `/` | catalog (product list) |
+| `/` | redirect to `/catalog` |
 | `/catalog/*` | catalog |
-| `/cart` | cart |
+| `/cart/*` | cart |
 | `/account/*` | account (protected from iter 8) |
 | `/dashboard` | dashboard → widgets (protected from iter 8) |
 | `/login` | shell |
 
-Route constants live in `packages/contracts` (from iter 3). No hardcoded cross-app URLs.
+Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardcoded URLs in links or redirects.
+`/login` and `/dashboard` are added in iterations 08 and 10.
 
 ## 3. Architecture
 
@@ -82,7 +83,7 @@ pnpm catalogs (from iter 1).
 | Transpiling | `swc-loader` | Types checked separately with `tsc --noEmit` |
 | Dev server | `webpack-dev-server` | `historyApiFallback: true`, CORS headers for remotes |
 | UI | React + TypeScript (strict) | |
-| Routing | React Router (declarative/library mode) | iter 3 |
+| Routing | React Router 8, package `react-router` (declarative mode) | iter 3, [ADR 0007](decisions/0007-react-router-8.md) |
 | Server state | TanStack Query | single `QueryClient` from shell, iter 5 |
 | Client shared state | Zustand | iter 5 |
 | Styles | CSS Modules + CSS custom properties (tokens) | iter 6 |
@@ -112,7 +113,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 ├─ services/
 │  └─ api/
 ├─ packages/            # created only by the iteration that needs them
-│  ├─ contracts/        # iter 2/4: types, route constants, events, query keys
+│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4+: props, events, query keys
 │  ├─ tokens/           # iter 6: CSS custom properties
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 13: standalone providers for remotes
@@ -154,6 +155,17 @@ apps/catalog/
   typecheck when a remote changes). Props types are named exports next to the exposed component.
   No ambient `declare module '<remote>/*'` stubs.
 
+### Routing (iter 3, [notes](notes/03-routing.md))
+- The shell owns the only `<BrowserRouter>` and mounts each remote's `./App` under its prefix with a splat
+  (`/catalog/*`). Remotes declare **relative** `<Routes>` and never render a router in `./App`; their
+  standalone `bootstrap.tsx` wraps `<App />` in its own `<BrowserRouter>` under the same prefix.
+- Every link and redirect uses `ROUTES` from `@mf/contracts`, also inside a remote (relative links in a splat
+  route resolve against the full URL).
+- Shell `output.publicPath: '/'`; remotes keep `'auto'` and set `HtmlWebpackPlugin({ publicPath: '/' })` so
+  deep links survive a refresh.
+- Workspace packages such as `@mf/contracts` export TypeScript source and are bundled into each app; they are
+  not MF-shared unless they hold state.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -169,7 +181,7 @@ extended by later iterations:
 |---|---|---|---|---|---|
 | react | ✅ | `^` + installed version | ❌ (warn) | ❌ | hooks break with two copies |
 | react-dom | ✅ | `^` + installed version | ❌ (warn) | ❌ | must match react |
-| react-router-dom | ✅ | `^` + installed version | ❌ (warn) | ❌ | router context must be single (iter 3) |
+| react-router | ✅ | `^` + installed version | ❌ (warn) | ❌ | router context must be single (iter 3) |
 | @tanstack/react-query | ✅ | `^` + installed version | ❌ (warn) | ❌ | one QueryClient context (iter 5) |
 | zustand | ✅ | `^` + installed version | ❌ (warn) | ❌ | store identity (iter 5) |
 | i18next, react-i18next | ✅ | `^` + installed version | ❌ (warn) | ❌ | one i18n instance (iter 7) |

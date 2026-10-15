@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 03 — Routing (`todo`)
+**Current iteration:** 04 — Contracts between micro-frontends (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,29 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-15 — Iteration 03 — Routing
+- Status: done
+- Done:
+  - React Router 8 (`react-router`, pnpm catalog `^8.4.0`) shared as a singleton in every app.
+  - shell: the only `<BrowserRouter>`, routes `/` → `/catalog`, `/catalog/*`, `/cart/*`, `/account/*`, 404; header
+    nav + `cart/CartWidget`; `publicPath: '/'`.
+  - catalog `./App` (list, `:productId`), cart `./App` (+ `./CartWidget`), new `apps/account` (:3003, `./App`:
+    profile, orders); `./ProductList` expose removed. Standalone bootstraps own a router under the same prefix.
+  - `packages/contracts` (`@mf/contracts`): `ROUTES`; all links and redirects use it. Remotes' standalone HTML uses
+    an absolute `/main.js` (`HtmlWebpackPlugin({ publicPath: '/' })`).
+  - Verified in the browser: deep-link refresh on every route, back/forward across apps, standalone remotes,
+    one `react-router` in `__mfDebug()`; grep shows URL literals only in contracts.
+- Walkthrough: router not shared, nested `BrowserRouter` (shared and not shared), relative `main.js` on deep links,
+  relative links in splat routes — exact texts confirmed by uncommitted experiments, see `docs/notes/03-routing.md`.
+- Decisions: [ADR 0007 — React Router 8](decisions/0007-react-router-8.md)
+- Deviations from SPEC/ROADMAP: `react-router` 8 instead of `react-router-dom` (no v8 of it); `/` redirects to `/catalog`
+  instead of rendering catalog at `/` (one mount point per remote); links inside remotes use `ROUTES` instead of
+  relative paths (splat-route resolution); `/login` and `/dashboard` left for iterations 08 / 10.
+- Known issues / tech debt: no error boundary per route yet (a broken remote blanks the shell — iteration 09);
+  standalone "foreign URL" placeholder duplicated in each remote bootstrap (dev-harness, iteration 13);
+  remotes' standalone `index.html` also includes `remoteEntry.js` as a script (harmless, revisit in iteration 11).
+- Next session starts with: iteration 04 — move boundary types (props) into `@mf/contracts` and define compatibility rules.
 
 ### 2026-10-15 — Iteration 02 — Types for remotes
 - Status: done

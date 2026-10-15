@@ -1,0 +1,13 @@
+{
+  "name": "@mf/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Cross-app contracts: route constants (iter 3), props, events, query keys (later).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  }
+}

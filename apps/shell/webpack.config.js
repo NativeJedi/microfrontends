@@ -6,12 +6,15 @@ const { ModuleFederationPlugin } = require('webpack').container;
 // cannot infer requiredVersion from it. Take the installed version instead.
 const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
+const reactRouterVersion = require('react-router/package.json').version;
 
 module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    publicPath: 'auto',
+    // The shell is always served from the site root. 'auto' would make index.html load
+    // a relative "main.js", which breaks on refresh of a nested URL such as /catalog/p1.
+    publicPath: '/',
     uniqueName: 'shell',
     clean: true,
   },
@@ -41,12 +44,19 @@ module.exports = {
       remotes: {
         catalog: 'catalog@http://localhost:3001/remoteEntry.js',
         cart: 'cart@http://localhost:3002/remoteEntry.js',
+        account: 'account@http://localhost:3003/remoteEntry.js',
       },
       shared: {
         react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
         'react-dom': {
           singleton: true,
           requiredVersion: `^${reactDomVersion}`,
+          strictVersion: false,
+        },
+        // One router instance: the shell's <BrowserRouter> context must reach every remote.
+        'react-router': {
+          singleton: true,
+          requiredVersion: `^${reactRouterVersion}`,
           strictVersion: false,
         },
       },

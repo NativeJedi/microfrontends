@@ -1,0 +1,27 @@
+{
+  "name": "account",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@mf/contracts": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:"
+  },
+  "devDependencies": {
+    "@swc/core": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "html-webpack-plugin": "catalog:",
+    "swc-loader": "catalog:",
+    "webpack": "catalog:",
+    "webpack-cli": "catalog:",
+    "webpack-dev-server": "catalog:"
+  }
+}
