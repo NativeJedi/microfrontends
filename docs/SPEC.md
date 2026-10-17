@@ -65,7 +65,7 @@ Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardco
 Ownership rules:
 - **shell** owns: URL/history, top-level layout, auth session, QueryClient instance,
   i18n instance, theme, Sentry init. Remotes never create these when hosted.
-- **Remotes** own: their routes below their prefix, their UI, their translations,
+- **Remotes** own: their routes below their prefix, their UI, their translations (one i18n namespace each),
   their query hooks (using shared query options from `@mf/queries`), and the client state of their domain
   (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - **dashboard** owns widget layout and widget loading; widget URLs come from the API registry.
@@ -88,7 +88,7 @@ pnpm catalogs (from iter 1).
 | Server state | TanStack Query | single `QueryClient` from shell, iter 5 |
 | Client shared state | Zustand | iter 5, store exposed by its owner ([ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)) |
 | Styles | CSS Modules (`css-loader`; `style-loader` in dev, `mini-css-extract-plugin` in production) + CSS custom properties (`@mf/tokens`); stylelint for remotes | iter 6, [ADR 0011](decisions/0011-style-isolation.md) |
-| i18n (internationalization) | i18next + react-i18next | iter 7 |
+| i18n (internationalization) | i18next + react-i18next; one instance from shell, namespaces loaded by their owners | iter 7, [ADR 0012](decisions/0012-i18n-ownership.md) |
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
 | Auth | JWT (JSON Web Token) access token in memory + refresh token in httpOnly cookie | iter 8 |
 | Containers | Docker Compose + nginx | iter 13 |
@@ -118,6 +118,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 │  ├─ api-client/       # @mf/api-client — iter 5: API types + request functions (stateless)
 │  ├─ queries/          # @mf/queries — iter 5: query keys + queryOptions (stateless)
 │  ├─ tokens/           # @mf/tokens — iter 6: CSS custom properties (light/dark)
+│  ├─ i18n/             # @mf/i18n — iter 7: languages, createI18n, namespace loader backend (stateless)
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
 ├─ pnpm-workspace.yaml
@@ -209,6 +210,19 @@ apps/catalog/
   `@mf/tokens/tokens.css` and owns the theme (`<html data-theme="dark">`, persisted as `shell:theme`); remotes read
   `var(--mf-…, <fallback>)` and import `tokens.css` only in their standalone `bootstrap.tsx`.
 - Dev: `style-loader`. Production: `MiniCssExtractPlugin`; remote CSS chunks load as `<link>` from the remote origin.
+
+### i18n (iter 7, [notes](notes/07-i18n.md), [ADR 0012](decisions/0012-i18n-ownership.md))
+- One i18next instance, created by the shell's `bootstrap.tsx` with `createI18n()` from `@mf/i18n` and passed through
+  `<I18nextProvider>`. Remotes call `createI18n` only in their standalone `bootstrap.tsx`; `exposed/` code never creates
+  or inits an instance. Languages: `en` (default), `uk`; no fallback language.
+- The shell owns the current language (header `<select>`, persisted as `shell:language`, `<html lang>`).
+- Every app owns **one namespace named after its container** (`shell`, `catalog`, `cart`, `account`) with
+  `src/i18n/locales/<lng>.json` and one hook `use<App>Translation()` built on `useNamespaceTranslation(ns, loader)`.
+  The loader is a dynamic `import()` of the JSON, so translations are chunks of the owning app loaded from its
+  `publicPath: 'auto'` — never a root-relative URL. Namespace names are a cross-app contract.
+- Texts a host passes into a remote's props (e.g. `CartWidget` `label`) are translated by the host.
+- Numbers, currency, dates and plurals go through i18next's `Intl` formatters (`{{value, currency(USD)}}`,
+  `{{value, datetime}}`, `_one/_few/_many/_other`), never hand-formatted. API content is not translated.
 
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.

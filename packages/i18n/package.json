@@ -1,0 +1,21 @@
+{
+  "name": "@mf/i18n",
+  "private": true,
+  "version": "0.0.0",
+  "description": "i18n glue shared by all apps: languages, instance factory for bootstraps, namespace loading hook. Stateless: the i18next instance is created by the shell.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "i18next": "catalog:",
+    "react": "catalog:",
+    "react-i18next": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:"
+  }
+}

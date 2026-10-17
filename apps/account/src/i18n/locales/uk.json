@@ -1,0 +1,20 @@
+{
+  "title": "Акаунт",
+  "nav": {
+    "profile": "Профіль",
+    "orders": "Замовлення"
+  },
+  "profile": {
+    "title": "Профіль",
+    "name": "Ім'я: {{name}}",
+    "email": "Пошта: {{email}}"
+  },
+  "orders": {
+    "title": "Замовлення",
+    "loading": "Завантаження…",
+    "loadError": "Не вдалося завантажити замовлення: {{message}}",
+    "placedAt": "{{value, datetime}}",
+    "total": "— {{value, currency(USD)}}"
+  },
+  "standaloneForeignUrl": "Ця адреса належить іншому мікрофронтенду. Відкрийте її в shell."
+}

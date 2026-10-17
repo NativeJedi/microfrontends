@@ -1,0 +1,20 @@
+{
+  "title": "Account",
+  "nav": {
+    "profile": "Profile",
+    "orders": "Orders"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name: {{name}}",
+    "email": "Email: {{email}}"
+  },
+  "orders": {
+    "title": "Orders",
+    "loading": "Loading…",
+    "loadError": "Could not load orders: {{message}}",
+    "placedAt": "{{value, datetime}}",
+    "total": "— {{value, currency(USD)}}"
+  },
+  "standaloneForeignUrl": "This URL belongs to another micro-frontend. Open it in the shell."
+}
