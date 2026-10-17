@@ -1,13 +1,14 @@
+import { useShellTranslation } from '../i18n/use-shell-translation';
 import styles from './ThemeToggle.module.css';
 import { useTheme } from './use-theme';
 
 export default function ThemeToggle() {
+  const t = useShellTranslation();
   const { theme, toggleTheme } = useTheme();
-  const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
   return (
     <button type="button" className={styles.toggle} onClick={toggleTheme}>
-      Switch to {nextTheme} theme
+      {theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
     </button>
   );
 }

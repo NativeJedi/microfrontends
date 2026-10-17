@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 07 — i18n (`todo`)
+**Current iteration:** 08 — Auth and session (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,32 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-17 — Iteration 07 — i18n
+- Status: done
+- Done:
+  - `i18next` + `react-i18next` MF singletons in all apps. `@mf/i18n` (stateless): `createI18n` (separate instance,
+    namespace loader backend, `fallbackLng: false`), `useNamespaceTranslation(ns, loader)`, languages `en`/`uk`.
+  - Shell creates the only instance in `bootstrap.tsx` (`<I18nextProvider>`), owns the language (`LanguageSwitcher`,
+    `shell:language`, `<html lang>`), translates its texts and the `CartWidget` label.
+  - catalog/cart/account: one namespace each, `src/i18n/locales/{en,uk}.json` loaded via `import()` → chunks from their
+    own origin; standalone bootstraps create their own instance. Prices/dates via i18next `Intl` formatters, uk plurals.
+  - Verified in the browser: live switch everywhere with no fallback flash, one locale request per app per language
+    (lazy, from :3000–:3003, none when switching back), `shell:language` survives reload, one i18next/react-i18next in
+    `__mfDebug()`, standalone :3001–:3003, clean console; production build served statically behaves the same.
+- Walkthrough: last `init` wins (confirmed by script: language reset, shell bundle wiped), locales from the host origin
+  (`404` for a root-relative URL; `ChunkLoadError` with `publicPath: '/'`, confirmed and reverted) — see
+  `docs/notes/07-i18n.md`.
+- Decisions: [ADR 0012 — i18n ownership](decisions/0012-i18n-ownership.md).
+- Deviations from SPEC/ROADMAP: the planned "remote `addResourceBundle` + Suspense + `startTransition`" approach was
+  replaced by a loader backend: react-i18next 17 updates through `useSyncExternalStore`, so the transition could not
+  prevent the Suspense fallback on a language switch (confirmed). `resolveJsonModule` added to `tsconfig.base.json`.
+- Known issues / tech debt: untyped translation keys (no `CustomTypeOptions`), no fallback language (missing key →
+  key shown); standalone remotes have no language switch (iter 14); API content untranslated; locale chunks have no
+  content hash (iter 11); `webpack serve --mode production` (not a project command) failed to render the shell with
+  `Cannot read properties of undefined (reading 'call')` — not investigated, `pnpm build` output works.
+- Versions: `i18next` 26.4.7, `react-i18next` 17.0.20 (pnpm catalog).
+- Next session starts with: iteration 08 — auth and session.
 
 ### 2026-10-17 — Iteration 06 — Style isolation
 - Status: done

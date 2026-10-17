@@ -9,6 +9,8 @@ const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
 const reactRouterVersion = require('react-router/package.json').version;
 const reactQueryVersion = require('@tanstack/react-query/package.json').version;
+const i18nextVersion = require('i18next/package.json').version;
+const reactI18nextVersion = require('react-i18next/package.json').version;
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -96,6 +98,13 @@ module.exports = (env, argv) => {
           '@tanstack/react-query': {
             singleton: true,
             requiredVersion: `^${reactQueryVersion}`,
+            strictVersion: false,
+          },
+          // One i18n instance: the shell owns it, and every remote adds its namespace to it.
+          i18next: { singleton: true, requiredVersion: `^${i18nextVersion}`, strictVersion: false },
+          'react-i18next': {
+            singleton: true,
+            requiredVersion: `^${reactI18nextVersion}`,
             strictVersion: false,
           },
         },

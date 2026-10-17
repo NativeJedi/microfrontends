@@ -1,0 +1,16 @@
+{
+  "title": "Кошик",
+  "empty": "Кошик порожній",
+  "loading": "Завантаження…",
+  "loadError": "Не вдалося завантажити товари: {{message}}",
+  "lineTotal": "— {{value, currency(USD)}}",
+  "remove": "Видалити",
+  "placeOrder": "Оформити замовлення",
+  "placingOrder": "Оформлюємо замовлення…",
+  "placeOrderError": "Не вдалося оформити замовлення: {{message}}",
+  "orderPlaced": "Замовлення {{orderId}} оформлено.",
+  "viewOrders": "Переглянути замовлення",
+  "continueShopping": "Продовжити покупки",
+  "goToCart": "До кошика",
+  "standaloneForeignUrl": "Ця адреса належить іншому мікрофронтенду. Відкрийте її в shell."
+}

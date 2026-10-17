@@ -1,19 +1,23 @@
 import { ROUTES } from '@mf/contracts';
 import { Link } from 'react-router';
 import { useCartStore } from '../cart-store';
+import { useCartTranslation } from '../i18n/use-cart-translation';
 import { usePlaceOrder } from '../orders/use-place-order';
 import { useCartProducts } from '../products/use-cart-products';
 import styles from './CartPage.module.css';
 
 function PlacedOrderMessage({ orderId }: { orderId: string }) {
+  const t = useCartTranslation();
+
   return (
     <p>
-      Order {orderId} placed. <Link to={ROUTES.account.orders}>View orders</Link>
+      {t('orderPlaced', { orderId })} <Link to={ROUTES.account.orders}>{t('viewOrders')}</Link>
     </p>
   );
 }
 
 export default function CartPage() {
+  const t = useCartTranslation();
   const lines = useCartStore((state) => state.lines);
   const removeItem = useCartStore((state) => state.removeItem);
   const { productLines, error } = useCartProducts(lines);
@@ -21,17 +25,17 @@ export default function CartPage() {
 
   return (
     <section>
-      <h2>Cart</h2>
+      <h2>{t('title')}</h2>
       {placeOrder.data && <PlacedOrderMessage orderId={placeOrder.data.id} />}
-      {lines.length === 0 && <p>Cart is empty</p>}
-      {error && <p>Could not load products: {error.message}</p>}
+      {lines.length === 0 && <p>{t('empty')}</p>}
+      {error && <p>{t('loadError', { message: error.message })}</p>}
       <ul>
         {productLines.map(({ productId, quantity, product }) => (
           <li key={productId}>
             <Link to={ROUTES.catalog.product(productId)}>{product?.name ?? productId}</Link> ×{' '}
-            {quantity} {product && `— $${product.price * quantity}`}{' '}
+            {quantity} {product && t('lineTotal', { value: product.price * quantity })}{' '}
             <button type="button" className={styles.button} onClick={() => removeItem(productId)}>
-              Remove
+              {t('remove')}
             </button>
           </li>
         ))}
@@ -43,12 +47,12 @@ export default function CartPage() {
           disabled={placeOrder.isPending}
           onClick={() => placeOrder.mutate({ items: lines })}
         >
-          {placeOrder.isPending ? 'Placing order…' : 'Place order'}
+          {placeOrder.isPending ? t('placingOrder') : t('placeOrder')}
         </button>
       )}
-      {placeOrder.error && <p>Could not place the order: {placeOrder.error.message}</p>}
+      {placeOrder.error && <p>{t('placeOrderError', { message: placeOrder.error.message })}</p>}
       <p>
-        <Link to={ROUTES.catalog.root}>Continue shopping</Link>
+        <Link to={ROUTES.catalog.root}>{t('continueShopping')}</Link>
       </p>
     </section>
   );

@@ -1,0 +1,15 @@
+{
+  "title": "Каталог",
+  "loading": "Завантаження…",
+  "loadError": "Не вдалося завантажити товари: {{message}}",
+  "price": "{{value, currency(USD)}}",
+  "productNotFound": "Товар не знайдено",
+  "backToCatalog": "Назад до каталогу",
+  "goToCart": "До кошика",
+  "addToCart": "Додати в кошик",
+  "addToCartWithQuantity_one": "Додати в кошик ({{count}} штука в кошику)",
+  "addToCartWithQuantity_few": "Додати в кошик ({{count}} штуки в кошику)",
+  "addToCartWithQuantity_many": "Додати в кошик ({{count}} штук у кошику)",
+  "addToCartWithQuantity_other": "Додати в кошик ({{count}} штуки в кошику)",
+  "standaloneForeignUrl": "Ця адреса належить іншому мікрофронтенду. Відкрийте її в shell."
+}

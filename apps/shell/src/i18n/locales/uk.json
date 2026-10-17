@@ -1,0 +1,21 @@
+{
+  "title": "Маркетплейс shell",
+  "nav": {
+    "catalog": "Каталог",
+    "account": "Акаунт",
+    "cart": "Кошик"
+  },
+  "recentlyViewed": "Нещодавно переглянуте: {{name}}",
+  "cartLoading": "Кошик…",
+  "loading": "Завантаження…",
+  "notFound": "Сторінку не знайдено",
+  "theme": {
+    "switchToDark": "Увімкнути темну тему",
+    "switchToLight": "Увімкнути світлу тему"
+  },
+  "language": {
+    "label": "Мова",
+    "en": "English",
+    "uk": "Українська"
+  }
+}
