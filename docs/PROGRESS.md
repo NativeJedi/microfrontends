@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 06 — Style isolation (`todo`)
+**Current iteration:** 07 — i18n (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,31 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-17 — Iteration 06 — Style isolation
+- Status: done
+- Done:
+  - CSS Modules in all apps: `css-loader` `localIdentName: '<app>__[local]__[hash:base64:5]'`, `style-loader` in dev,
+    `MiniCssExtractPlugin` in production (configs became `(env, argv) => ({…})`); all inline styles replaced;
+    `src/css.d.ts` per app. catalog and cart both define `.button` → `catalog__button__*` / `cart__button__*`.
+  - `@mf/tokens`: `--mf-*` custom properties, dark values on `:root[data-theme='dark']`. Shell loads tokens + the only
+    reset (`global.css`) and owns the theme (`ThemeToggle`, `use-theme.ts`, `shell:theme`); remotes use `var()` with
+    fallbacks and import tokens only in standalone bootstrap.
+  - stylelint (`stylelint.config.js`) in `pnpm lint`: no type/universal/id selectors, `:global`, `:root`,
+    `@font-face`, `@import` in remote CSS Modules; no selectors in plain `.css` in remotes.
+  - Verified in the browser: prefixed classes, theme switch across shell/catalog/cart widget/mini-cart/account, theme
+    survives reload, standalone :3001–3003 get tokens, clean console; production build: remote `.css` chunks as
+    `<link>` from :3001–:3003 (three `858.css` coexist).
+- Walkthrough: load-order conflict of global `.button`/reset; styles of an unmounted remote stay in `<head>` (confirmed
+  in dev and production) — see `docs/notes/06-styles.md`.
+- Decisions: [ADR 0011 — style isolation](decisions/0011-style-isolation.md).
+- Deviations from SPEC/ROADMAP: Shadow DOM demo not built (user decision) — trade-offs in notes and ADR; local `main`
+  reset to `origin/main` (`ca9241f`, iteration 05 squash-merged via PR #1, same tree as the branch).
+- Known issues / tech debt: CSS not minified in production (iteration 11); theme applied after first render (brief light
+  flash with a stored dark theme); remotes duplicate token fallbacks.
+- Versions: `css-loader` 7.1.5, `style-loader` 4.0.0, `mini-css-extract-plugin` 2.10.2 (pnpm catalog), `stylelint`
+  17.16.0 (root).
+- Next session starts with: iteration 07 — i18n.
 
 ### 2026-10-15 — Iteration 05 — State: TanStack Query + Zustand
 - Status: done

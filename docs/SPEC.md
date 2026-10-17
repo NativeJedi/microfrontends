@@ -87,7 +87,7 @@ pnpm catalogs (from iter 1).
 | Routing | React Router 8, package `react-router` (declarative mode) | iter 3, [ADR 0007](decisions/0007-react-router-8.md) |
 | Server state | TanStack Query | single `QueryClient` from shell, iter 5 |
 | Client shared state | Zustand | iter 5, store exposed by its owner ([ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)) |
-| Styles | CSS Modules + CSS custom properties (tokens) | iter 6 |
+| Styles | CSS Modules (`css-loader`; `style-loader` in dev, `mini-css-extract-plugin` in production) + CSS custom properties (`@mf/tokens`); stylelint for remotes | iter 6, [ADR 0011](decisions/0011-style-isolation.md) |
 | i18n (internationalization) | i18next + react-i18next | iter 7 |
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
 | Auth | JWT (JSON Web Token) access token in memory + refresh token in httpOnly cookie | iter 8 |
@@ -117,7 +117,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 │  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events
 │  ├─ api-client/       # @mf/api-client — iter 5: API types + request functions (stateless)
 │  ├─ queries/          # @mf/queries — iter 5: query keys + queryOptions (stateless)
-│  ├─ tokens/           # iter 6: CSS custom properties
+│  ├─ tokens/           # @mf/tokens — iter 6: CSS custom properties (light/dark)
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
 ├─ pnpm-workspace.yaml
@@ -200,6 +200,16 @@ apps/catalog/
   `useCartQuantity`), never as the raw store. Persisted keys are prefixed with the owner (`cart:items`) and the
   persisted value is narrowed on load (`localStorage` is untrusted).
 
+### Styles (iter 6, [notes](notes/06-styles.md), [ADR 0011](decisions/0011-style-isolation.md))
+- Every component style is a CSS Module (`X.module.css` next to `X.tsx`); `localIdentName` is
+  `'<app>__[local]__[hash:base64:5]'` with a literal app prefix in each `webpack.config.js`. No inline `style={{}}`.
+- Global CSS exists only in the shell (`global.css` — the only reset) and in `@mf/tokens`. Remotes ship no global
+  selectors; stylelint (`stylelint.config.js`, part of `pnpm lint`) enforces it.
+- Tokens are CSS custom properties `--mf-*` (a cross-app contract: renaming one is breaking). The shell loads
+  `@mf/tokens/tokens.css` and owns the theme (`<html data-theme="dark">`, persisted as `shell:theme`); remotes read
+  `var(--mf-…, <fallback>)` and import `tokens.css` only in their standalone `bootstrap.tsx`.
+- Dev: `style-loader`. Production: `MiniCssExtractPlugin`; remote CSS chunks load as `<link>` from the remote origin.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -257,4 +267,4 @@ Rules:
 | `pnpm dev --filter <app>...` | one app with its workspace deps |
 | `pnpm build` | production build of everything |
 | `pnpm typecheck` | `tsc --noEmit` in every package (after remotes emit their `types/`) |
-| `pnpm lint` | ESLint everywhere |
+| `pnpm lint` | ESLint everywhere; stylelint for CSS (iter 6) |

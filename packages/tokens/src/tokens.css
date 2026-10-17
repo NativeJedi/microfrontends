@@ -1,0 +1,35 @@
+/*
+ * Global on purpose: custom properties are the only styles shared across micro-frontends.
+ * The shell loads this file and switches the theme with <html data-theme="dark">;
+ * remotes read the variables with a fallback and never define them.
+ */
+:root {
+  --mf-color-bg: #fff;
+  --mf-color-surface: #f4f4f5;
+  --mf-color-text: #18181b;
+  --mf-color-muted: #71717a;
+  --mf-color-border: #d4d4d8;
+  --mf-color-accent: #2563eb;
+  --mf-color-on-accent: #fff;
+  --mf-space-1: 4px;
+  --mf-space-2: 8px;
+  --mf-space-3: 16px;
+  --mf-space-4: 24px;
+  --mf-radius: 6px;
+  --mf-font-family: system-ui, sans-serif;
+  --mf-font-size: 16px;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --mf-color-bg: #18181b;
+  --mf-color-surface: #27272a;
+  --mf-color-text: #f4f4f5;
+  --mf-color-muted: #a1a1aa;
+  --mf-color-border: #3f3f46;
+  --mf-color-accent: #60a5fa;
+  --mf-color-on-accent: #18181b;
+
+  color-scheme: dark;
+}

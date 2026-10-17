@@ -9,5 +9,5 @@
     "rootDir": "src",
     "outDir": "types"
   },
-  "include": ["src/exposed"]
+  "include": ["src/exposed", "src/css.d.ts"]
 }

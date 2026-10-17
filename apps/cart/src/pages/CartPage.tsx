@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useCartStore } from '../cart-store';
 import { usePlaceOrder } from '../orders/use-place-order';
 import { useCartProducts } from '../products/use-cart-products';
+import styles from './CartPage.module.css';
 
 function PlacedOrderMessage({ orderId }: { orderId: string }) {
   return (
@@ -29,7 +30,7 @@ export default function CartPage() {
           <li key={productId}>
             <Link to={ROUTES.catalog.product(productId)}>{product?.name ?? productId}</Link> ×{' '}
             {quantity} {product && `— $${product.price * quantity}`}{' '}
-            <button type="button" onClick={() => removeItem(productId)}>
+            <button type="button" className={styles.button} onClick={() => removeItem(productId)}>
               Remove
             </button>
           </li>
@@ -38,6 +39,7 @@ export default function CartPage() {
       {lines.length > 0 && (
         <button
           type="button"
+          className={styles.button}
           disabled={placeOrder.isPending}
           onClick={() => placeOrder.mutate({ items: lines })}
         >

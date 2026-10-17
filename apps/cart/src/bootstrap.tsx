@@ -2,6 +2,8 @@ import { ROUTES } from '@mf/contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+// Standalone only: when hosted, the shell has already loaded the tokens and owns the theme.
+import '@mf/tokens/tokens.css';
 import App from './exposed/App';
 
 // Standalone mode: the remote owns the router only when it is not hosted by the shell.

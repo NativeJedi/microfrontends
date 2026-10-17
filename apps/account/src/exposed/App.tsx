@@ -2,6 +2,7 @@ import { ROUTES } from '@mf/contracts';
 import { Navigate, NavLink, Route, Routes } from 'react-router';
 import OrdersPage from '../pages/OrdersPage';
 import ProfilePage from '../pages/ProfilePage';
+import styles from './App.module.css';
 
 // Route definitions are relative to the host's mount point (/account/*). Links use ROUTES:
 // inside a splat route a relative link resolves against the whole URL
@@ -10,7 +11,7 @@ export default function App() {
   return (
     <section>
       <h2>Account</h2>
-      <nav style={{ display: 'flex', gap: 16 }}>
+      <nav className={styles.nav}>
         <NavLink to={ROUTES.account.profile}>Profile</NavLink>
         <NavLink to={ROUTES.account.orders}>Orders</NavLink>
       </nav>

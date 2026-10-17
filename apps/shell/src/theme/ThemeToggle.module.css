@@ -1,0 +1,9 @@
+.toggle {
+  padding: var(--mf-space-1) var(--mf-space-2);
+  border: 1px solid var(--mf-color-border);
+  border-radius: var(--mf-radius);
+  background: var(--mf-color-surface);
+  color: var(--mf-color-text);
+  font: inherit;
+  cursor: pointer;
+}

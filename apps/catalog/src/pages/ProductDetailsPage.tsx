@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import AddToCartButton from '../add-to-cart/AddToCartButton';
+import styles from './ProductDetailsPage.module.css';
 
 export default function ProductDetailsPage() {
   const { productId = '' } = useParams();
@@ -31,7 +32,7 @@ export default function ProductDetailsPage() {
       <p>{product.description}</p>
       <p>${product.price}</p>
       <AddToCartButton productId={product.id} />
-      <nav style={{ display: 'flex', gap: 16 }}>
+      <nav className={styles.nav}>
         <Link to={ROUTES.catalog.root}>Back to catalog</Link>
         <Link to={ROUTES.cart}>Go to cart</Link>
       </nav>

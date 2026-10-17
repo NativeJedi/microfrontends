@@ -1,0 +1,5 @@
+.nav {
+  display: flex;
+  gap: var(--mf-space-3, 16px);
+  margin-top: var(--mf-space-3, 16px);
+}

@@ -1,5 +1,6 @@
 import { selectItemCount, useCartStore } from '../cart-store';
 import MiniCart from '../mini-cart/MiniCart';
+import styles from './CartWidget.module.css';
 
 export interface CartWidgetProps {
   label: string;
@@ -12,9 +13,10 @@ export default function CartWidget({ label }: CartWidgetProps) {
   const setMiniCartOpen = useCartStore((state) => state.setMiniCartOpen);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className={styles.widget}>
       <button
         type="button"
+        className={styles.toggle}
         aria-expanded={isMiniCartOpen}
         aria-controls="mini-cart"
         onClick={() => setMiniCartOpen(!isMiniCartOpen)}

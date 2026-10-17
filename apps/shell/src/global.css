@@ -1,0 +1,21 @@
+/*
+ * The only reset on the page. It is global, so it lives in the shell that owns the layout;
+ * a remote shipping its own reset would restyle every other app depending on load order.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--mf-color-bg);
+  color: var(--mf-color-text);
+  font-family: var(--mf-font-family);
+  font-size: var(--mf-font-size);
+}
+
+a {
+  color: var(--mf-color-accent);
+}

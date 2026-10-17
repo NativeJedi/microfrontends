@@ -1,6 +1,8 @@
 import { ROUTES } from '@mf/contracts';
 import { lazy, Suspense } from 'react';
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router';
+import styles from './App.module.css';
+import ThemeToggle from './theme/ThemeToggle';
 import { useRecentlyViewedProduct } from './use-recently-viewed-product';
 
 const CatalogApp = lazy(() => import('catalog/App'));
@@ -19,14 +21,15 @@ function RecentlyViewedLink() {
 
 function Header() {
   return (
-    <header style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-      <h1 style={{ marginRight: 'auto' }}>Marketplace shell</h1>
+    <header className={styles.header}>
+      <h1 className={styles.title}>Marketplace shell</h1>
       <NavLink to={ROUTES.catalog.root}>Catalog</NavLink>
       <NavLink to={ROUTES.account.root}>Account</NavLink>
       <RecentlyViewedLink />
       <Suspense fallback={<span>Cart…</span>}>
         <CartWidget label="Cart" />
       </Suspense>
+      <ThemeToggle />
     </header>
   );
 }
@@ -39,7 +42,7 @@ function NotFoundPage() {
 // and the remote matches the rest of the path with its own relative <Routes>.
 export default function App() {
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: 960, margin: '0 auto', padding: 16 }}>
+    <div className={styles.layout}>
       <Header />
       <main>
         <Suspense fallback={<p>Loading…</p>}>

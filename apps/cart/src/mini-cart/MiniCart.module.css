@@ -1,0 +1,12 @@
+.miniCart {
+  position: absolute;
+  top: calc(100% + var(--mf-space-1, 4px));
+  right: 0;
+  z-index: 1;
+  min-width: 240px;
+  padding: var(--mf-space-3, 16px);
+  border: 1px solid var(--mf-color-border, #d4d4d8);
+  border-radius: var(--mf-radius, 6px);
+  background: var(--mf-color-surface, #f4f4f5);
+  color: var(--mf-color-text, #18181b);
+}

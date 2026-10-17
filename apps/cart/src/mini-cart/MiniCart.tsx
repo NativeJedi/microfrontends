@@ -2,6 +2,7 @@ import { ROUTES } from '@mf/contracts';
 import { Link } from 'react-router';
 import { useCartStore } from '../cart-store';
 import { useCartProducts } from '../products/use-cart-products';
+import styles from './MiniCart.module.css';
 
 interface MiniCartProps {
   id: string;
@@ -13,18 +14,7 @@ export default function MiniCart({ id }: MiniCartProps) {
   const { productLines, isPending } = useCartProducts(lines);
 
   return (
-    <div
-      id={id}
-      style={{
-        position: 'absolute',
-        right: 0,
-        top: '100%',
-        minWidth: 240,
-        padding: 12,
-        background: 'white',
-        border: '1px solid #ccc',
-      }}
-    >
+    <div id={id} className={styles.miniCart}>
       {lines.length === 0 && <p>Cart is empty</p>}
       {isPending && lines.length > 0 && <p>Loading…</p>}
       <ul>

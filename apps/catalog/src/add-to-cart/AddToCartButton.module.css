@@ -1,0 +1,10 @@
+/* Same local name as cart's `.button`: CSS Modules turn them into catalog__button__* and cart__button__*. */
+.button {
+  padding: var(--mf-space-1, 4px) var(--mf-space-2, 8px);
+  border: none;
+  border-radius: var(--mf-radius, 6px);
+  background: var(--mf-color-accent, #2563eb);
+  color: var(--mf-color-on-accent, #fff);
+  font: inherit;
+  cursor: pointer;
+}

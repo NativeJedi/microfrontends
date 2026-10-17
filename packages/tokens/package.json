@@ -1,0 +1,12 @@
+{
+  "name": "@mf/tokens",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Design tokens as CSS custom properties: light and dark theme values.",
+  "exports": {
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "lint": "stylelint \"src/**/*.css\""
+  }
+}

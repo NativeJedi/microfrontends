@@ -1,0 +1,14 @@
+.button {
+  padding: var(--mf-space-1, 4px) var(--mf-space-2, 8px);
+  border: 1px solid var(--mf-color-border, #d4d4d8);
+  border-radius: var(--mf-radius, 6px);
+  background: transparent;
+  color: var(--mf-color-text, #18181b);
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
