@@ -1,30 +1,36 @@
+import type { Order } from '@mf/api-client';
 import { ROUTES } from '@mf/contracts';
+import { orderQueries } from '@mf/queries';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 
-interface Order {
-  id: string;
-  productId: string;
-  productName: string;
-  total: number;
+function OrderRow({ order }: { order: Order }) {
+  return (
+    <li>
+      {order.id}:{' '}
+      {order.items.map((item, index) => (
+        <span key={item.productId}>
+          {index > 0 && ', '}
+          <Link to={ROUTES.catalog.product(item.productId)}>{item.name}</Link> × {item.quantity}
+        </span>
+      ))}{' '}
+      — ${order.total}
+    </li>
+  );
 }
 
-// Static mock until the API in iteration 05.
-const orders: Order[] = [
-  { id: 'o-1001', productId: 'p3', productName: 'Standing desk mat', total: 54 },
-  { id: 'o-1002', productId: 'p1', productName: 'Mechanical keyboard', total: 89 },
-];
-
+// Cart invalidates the orders key after checkout, so a new order shows up here without a reload.
 export default function OrdersPage() {
+  const { data: orders, isPending, error } = useQuery(orderQueries.list());
+
   return (
     <section>
       <h3>Orders</h3>
+      {isPending && <p>Loading…</p>}
+      {error && <p>Could not load orders: {error.message}</p>}
       <ul>
-        {orders.map((order) => (
-          <li key={order.id}>
-            {order.id}:{' '}
-            <Link to={ROUTES.catalog.product(order.productId)}>{order.productName}</Link> — $
-            {order.total}
-          </li>
+        {orders?.map((order) => (
+          <OrderRow key={order.id} order={order} />
         ))}
       </ul>
     </section>

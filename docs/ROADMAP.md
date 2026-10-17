@@ -17,7 +17,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 02 | Types for remotes | #4 | done |
 | 03 | Routing | #5 | done |
 | 04 | Contracts between micro-frontends | #3 | done |
-| 05 | State: TanStack Query + Zustand | #1 | todo |
+| 05 | State: TanStack Query + Zustand | #1 | done |
 | 06 | Style isolation | #6 | todo |
 | 07 | i18n | #8 | todo |
 | 08 | Auth and session | #12 | todo |
@@ -196,12 +196,16 @@ consumer-driven contracts.
 - Compare two ways to share the store instance, implement the chosen one:
   - **A.** store module exposed via MF from shell (`shell/store`), instance identity by module;
   - **B.** `packages/store` workspace package shared as MF singleton.
+  - Done: **C** — A's mechanism with the domain owner: cart exposes `./store` (`addToCart`, `useCartQuantity`);
+    the header counter is `cart/CartWidget`; keys + `queryOptions` in `packages/queries`, requests in
+    `packages/api-client` ([ADR 0010](decisions/0010-api-client-and-queries-packages.md))
+    ([ADR 0009](decisions/0009-cart-store-exposed-by-owner.md), [notes](notes/05-state.md)).
 
 **Problems**
 1. react-query not shared → "No QueryClient set" or two caches with duplicate requests.
 2. Store package imported but not shared → each app has its own store; header counter stuck at 0.
 
-**⚠ Open decision:** store sharing A vs B — present trade-offs, user picks. ADR.
+**Decision (2026-10-15):** option C, see ADR 0009.
 
 **Acceptance criteria**
 - Header counter updates instantly when adding from catalog.
@@ -266,7 +270,8 @@ refreshes → refresh token rotation invalidates the session; logout in one tab 
   Access token short-lived, kept in memory; refresh token in httpOnly cookie (`SameSite`, `Path`).
 - shell owns auth: login page, protected routes (`/account/*`, `/dashboard`), session exposure
   to remotes (via the mechanism chosen in iter 5).
-- Shared HTTP client (fetch wrapper) with token injection and **single-flight refresh**
+- Shared HTTP client (fetch wrapper) with token injection and **single-flight refresh**: a factory in
+  `@mf/api-client`, one instance created by the shell and passed to remotes through expose props (ADR 0010)
   (concurrent 401s wait for one refresh).
 - Logout: `queryClient.clear()`, store reset, broadcast to other tabs (BroadcastChannel).
 - Standalone remotes: dev login.

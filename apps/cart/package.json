@@ -8,6 +8,9 @@
     },
     "./CartWidget": {
       "types": "./types/exposed/CartWidget.d.ts"
+    },
+    "./store": {
+      "types": "./types/exposed/store.d.ts"
     }
   },
   "scripts": {
@@ -18,10 +21,14 @@
     "types": "rm -rf types && tsc -p tsconfig.types.json"
   },
   "dependencies": {
+    "@mf/api-client": "workspace:*",
     "@mf/contracts": "workspace:*",
+    "@mf/queries": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "catalog:"
+    "react-router": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@swc/core": "catalog:",

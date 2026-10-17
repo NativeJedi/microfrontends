@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@mf/contracts": "workspace:*",
+    "@mf/queries": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:"
@@ -24,6 +26,7 @@
     "@swc/core": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "cart": "workspace:*",
     "html-webpack-plugin": "catalog:",
     "swc-loader": "catalog:",
     "webpack": "catalog:",

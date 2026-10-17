@@ -7,6 +7,7 @@ const { ModuleFederationPlugin } = require('webpack').container;
 const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
 const reactRouterVersion = require('react-router/package.json').version;
+const reactQueryVersion = require('@tanstack/react-query/package.json').version;
 
 module.exports = {
   entry: './src/index.ts',
@@ -44,6 +45,10 @@ module.exports = {
       exposes: {
         './App': './src/exposed/App.tsx',
       },
+      // Remote-to-remote: catalog adds products through cart's public `./store` API.
+      remotes: {
+        cart: 'cart@http://localhost:3002/remoteEntry.js',
+      },
       shared: {
         react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
         'react-dom': {
@@ -55,6 +60,12 @@ module.exports = {
         'react-router': {
           singleton: true,
           requiredVersion: `^${reactRouterVersion}`,
+          strictVersion: false,
+        },
+        // One QueryClient context and one cache: the shell's provider must reach every remote.
+        '@tanstack/react-query': {
+          singleton: true,
+          requiredVersion: `^${reactQueryVersion}`,
           strictVersion: false,
         },
       },

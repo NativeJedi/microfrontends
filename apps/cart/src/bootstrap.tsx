@@ -1,4 +1,5 @@
 import { ROUTES } from '@mf/contracts';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import App from './exposed/App';
@@ -20,8 +21,13 @@ function StandaloneRoutes() {
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root not found');
 
+// Standalone only: when hosted, the remote uses the shell's client (exposed modules never create one).
+const queryClient = new QueryClient();
+
 createRoot(container).render(
-  <BrowserRouter>
-    <StandaloneRoutes />
-  </BrowserRouter>,
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <StandaloneRoutes />
+    </BrowserRouter>
+  </QueryClientProvider>,
 );

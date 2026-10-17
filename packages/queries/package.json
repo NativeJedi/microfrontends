@@ -1,0 +1,17 @@
+{
+  "name": "@mf/queries",
+  "private": true,
+  "version": "0.0.0",
+  "description": "TanStack Query keys and query options shared by all apps. Stateless: the QueryClient is created by the shell.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@mf/api-client": "workspace:*",
+    "@tanstack/react-query": "catalog:"
+  }
+}
