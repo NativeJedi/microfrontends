@@ -80,9 +80,15 @@ importers:
 
   apps/account:
     dependencies:
+      '@mf/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@mf/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mf/queries':
+        specifier: workspace:*
+        version: link:../../packages/queries
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.3(react@19.3.0)
@@ -123,9 +129,15 @@ importers:
 
   apps/cart:
     dependencies:
+      '@mf/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@mf/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mf/queries':
+        specifier: workspace:*
+        version: link:../../packages/queries
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.3(react@19.3.0)
@@ -172,6 +184,9 @@ importers:
       '@mf/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mf/queries':
+        specifier: workspace:*
+        version: link:../../packages/queries
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.3(react@19.3.0)
@@ -265,8 +280,15 @@ importers:
         specifier: 'catalog:'
         version: 6.0.0(webpack-cli@7.2.3)(webpack@5.111.1)
 
-  packages/contracts:
+  packages/api-client: {}
+
+  packages/contracts: {}
+
+  packages/queries:
     dependencies:
+      '@mf/api-client':
+        specifier: workspace:*
+        version: link:../api-client
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.3(react@19.3.0)

@@ -39,7 +39,7 @@ export default function CartPage() {
         <button
           type="button"
           disabled={placeOrder.isPending}
-          onClick={() => placeOrder.mutate(lines)}
+          onClick={() => placeOrder.mutate({ items: lines })}
         >
           {placeOrder.isPending ? 'Placing order…' : 'Place order'}
         </button>

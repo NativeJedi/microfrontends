@@ -21,7 +21,9 @@
     "types": "rm -rf types && tsc -p tsconfig.types.json"
   },
   "dependencies": {
+    "@mf/api-client": "workspace:*",
     "@mf/contracts": "workspace:*",
+    "@mf/queries": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

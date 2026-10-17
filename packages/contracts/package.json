@@ -2,15 +2,12 @@
   "name": "@mf/contracts",
   "private": true,
   "version": "0.0.0",
-  "description": "Cross-app contracts: route constants, custom events, API types and query options.",
+  "description": "Cross-app contracts: route constants and custom events.",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
-  },
-  "dependencies": {
-    "@tanstack/react-query": "catalog:"
   }
 }

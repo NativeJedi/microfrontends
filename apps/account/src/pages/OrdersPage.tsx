@@ -1,4 +1,6 @@
-import { orderQueries, ROUTES, type Order } from '@mf/contracts';
+import type { Order } from '@mf/api-client';
+import { ROUTES } from '@mf/contracts';
+import { orderQueries } from '@mf/queries';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 

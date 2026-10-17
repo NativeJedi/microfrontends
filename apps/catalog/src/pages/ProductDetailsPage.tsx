@@ -1,4 +1,5 @@
-import { dispatchMfEvent, MF_EVENTS, productQueries, ROUTES } from '@mf/contracts';
+import { dispatchMfEvent, MF_EVENTS, ROUTES } from '@mf/contracts';
+import { productQueries } from '@mf/queries';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';

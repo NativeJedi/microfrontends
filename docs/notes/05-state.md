@@ -24,8 +24,12 @@ coupling between independently deployed apps.
   );
   ```
   Each remote's standalone `bootstrap.tsx` creates its own client; nothing in `exposed/` does.
-- **Query contract in `@mf/contracts`** (`src/api.ts`): API types, key factories and `queryOptions` factories.
+- **Two stateless packages** ([ADR 0010](../decisions/0010-api-client-and-queries-packages.md)):
+  `@mf/api-client` — API types and request functions (`getProducts`, `getProduct`, `getOrders`, `createOrder`),
+  no React; `@mf/queries` — key factories and `queryOptions` factories built on those functions. `@mf/contracts`
+  keeps only routes and events.
   ```ts
+  // packages/queries/src/products.ts
   export const productKeys = {
     all: ['products'] as const,
     list: () => [...productKeys.all, 'list'] as const,
@@ -34,14 +38,15 @@ coupling between independently deployed apps.
   export const productQueries = {
     list: () => queryOptions({
       queryKey: productKeys.list(),
-      queryFn: () => fetchJson<Product[]>('/products'),
+      queryFn: getProducts, // from @mf/api-client
       staleTime: STALE_TIME_MS, // 60 s
     }),
   };
   ```
   catalog uses `productQueries.list()/detail(id)`, cart joins its lines with `productQueries.list()` (cache filled by
   catalog), account uses `orderQueries.list()`.
-- **Cross-app invalidation.** Cart's `usePlaceOrder` mutation: `onSuccess` → `clear()` the cart and
+- **Cross-app invalidation.** Cart's `usePlaceOrder` mutation (`mutationFn: createOrder` from `@mf/api-client`, used
+  only by cart, so it lives in cart): `onSuccess` → `clear()` the cart and
   `queryClient.invalidateQueries({ queryKey: orderKeys.all })`.
 - **Client state owned by cart** ([ADR 0009](../decisions/0009-cart-store-exposed-by-owner.md)). `apps/cart/src/cart-store.ts`:
   Zustand store with `lines`, `isMiniCartOpen`, `persist` (`cart:items`, only `lines`, `version: 1`, persisted value
@@ -172,7 +177,7 @@ standalone dev.
   **A:** `No QueryClient set, use QueryClientProvider to set one` — two copies of the library have two contexts. If a
   remote adds its own provider instead, it silently gets a second cache: duplicate requests, invalidation does not cross apps.
 - **Q:** Query keys across teams?
-  **A:** They are a public contract: key factories (better, `queryOptions`) in a shared contracts package; renaming a
+  **A:** They are a public contract: key factories (better, `queryOptions`) in a shared stateless package; renaming a
   key is a breaking change; invalidate by prefix (`orderKeys.all`).
 - **Q:** Risks of a shared store?
   **A:** Unclear ownership, hidden coupling to the state shape, version skew at runtime, and a single failure point.

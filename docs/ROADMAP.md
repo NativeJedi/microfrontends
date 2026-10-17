@@ -197,7 +197,8 @@ consumer-driven contracts.
   - **A.** store module exposed via MF from shell (`shell/store`), instance identity by module;
   - **B.** `packages/store` workspace package shared as MF singleton.
   - Done: **C** — A's mechanism with the domain owner: cart exposes `./store` (`addToCart`, `useCartQuantity`);
-    the header counter is `cart/CartWidget`; `queryOptions` factories in contracts next to the key factories
+    the header counter is `cart/CartWidget`; keys + `queryOptions` in `packages/queries`, requests in
+    `packages/api-client` ([ADR 0010](decisions/0010-api-client-and-queries-packages.md))
     ([ADR 0009](decisions/0009-cart-store-exposed-by-owner.md), [notes](notes/05-state.md)).
 
 **Problems**
@@ -269,7 +270,8 @@ refreshes → refresh token rotation invalidates the session; logout in one tab 
   Access token short-lived, kept in memory; refresh token in httpOnly cookie (`SameSite`, `Path`).
 - shell owns auth: login page, protected routes (`/account/*`, `/dashboard`), session exposure
   to remotes (via the mechanism chosen in iter 5).
-- Shared HTTP client (fetch wrapper) with token injection and **single-flight refresh**
+- Shared HTTP client (fetch wrapper) with token injection and **single-flight refresh**: a factory in
+  `@mf/api-client`, one instance created by the shell and passed to remotes through expose props (ADR 0010)
   (concurrent 401s wait for one refresh).
 - Logout: `queryClient.clear()`, store reset, broadcast to other tabs (BroadcastChannel).
 - Standalone remotes: dev login.

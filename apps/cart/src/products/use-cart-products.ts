@@ -1,4 +1,5 @@
-import { productQueries, type Product } from '@mf/contracts';
+import type { Product } from '@mf/api-client';
+import { productQueries } from '@mf/queries';
 import { useQuery } from '@tanstack/react-query';
 import type { CartLine } from '../cart-store';
 

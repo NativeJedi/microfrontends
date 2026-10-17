@@ -1,4 +1,5 @@
-import { productQueries, ROUTES } from '@mf/contracts';
+import { ROUTES } from '@mf/contracts';
+import { productQueries } from '@mf/queries';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import AddToCartButton from '../add-to-cart/AddToCartButton';

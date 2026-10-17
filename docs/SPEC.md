@@ -66,7 +66,7 @@ Ownership rules:
 - **shell** owns: URL/history, top-level layout, auth session, QueryClient instance,
   i18n instance, theme, Sentry init. Remotes never create these when hosted.
 - **Remotes** own: their routes below their prefix, their UI, their translations,
-  their query hooks (using shared query options from `@mf/contracts`), and the client state of their domain
+  their query hooks (using shared query options from `@mf/queries`), and the client state of their domain
   (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - **dashboard** owns widget layout and widget loading; widget URLs come from the API registry.
 
@@ -114,7 +114,9 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 ├─ services/
 │  └─ api/
 ├─ packages/            # created only by the iteration that needs them
-│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events; iter 5: API types, query keys/options
+│  ├─ contracts/        # @mf/contracts — iter 3: route constants; iter 4: events
+│  ├─ api-client/       # @mf/api-client — iter 5: API types + request functions (stateless)
+│  ├─ queries/          # @mf/queries — iter 5: query keys + queryOptions (stateless)
 │  ├─ tokens/           # iter 6: CSS custom properties
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
@@ -185,8 +187,12 @@ apps/catalog/
 ### State (iter 5, [notes](notes/05-state.md))
 - One `QueryClient`, created in the shell's `bootstrap.tsx`; `@tanstack/react-query` is an MF singleton. Remotes
   create a client only in their standalone `bootstrap.tsx`, never in `exposed/`.
-- `@mf/contracts` holds API types, query key factories (`productKeys`, `orderKeys`) and `queryOptions` factories
-  (`productQueries`, `orderQueries`): key, fetcher, response type and `staleTime` travel together. Query keys are a
+- Layers ([ADR 0010](decisions/0010-api-client-and-queries-packages.md)): `@mf/api-client` — API types and request
+  functions, no React; `@mf/queries` — key factories (`productKeys`, `orderKeys`) and `queryOptions` factories
+  (`productQueries`, `orderQueries`): key, fetcher, response type and `staleTime` travel together; `@mf/contracts` —
+  routes and events only.
+- Workspace packages are **stateless** (bundled into each app). Stateful instances (`QueryClient`, the HTTP client of
+  iter 8) are created once by the shell and reach remotes through context or expose props. Query keys are a
   cross-app contract (renaming one is a breaking change). Cache settings live in the query options, not in
   `QueryClient` defaults, so a remote caches the same way hosted and standalone.
 - Mutations invalidate by the owner's key factory (`orderKeys.all`); other apps refetch on their next mount.
@@ -230,7 +236,7 @@ Rules:
 
 | Kind | Tool | Owner |
 |---|---|---|
-| Server state / cache (products, orders, widgets data) | TanStack Query, single `QueryClient` | shell creates the client; key factories and query options in `packages/contracts`; data owned by the API |
+| Server state / cache (products, orders, widgets data) | TanStack Query, single `QueryClient` | shell creates the client; key factories and query options in `packages/queries`, requests in `packages/api-client`; data owned by the API |
 | Client shared state (cart items, mini-cart open; session snapshot in iter 8) | Zustand, one instance in the owner's container | owner app exposes functions: cart → `cart/store`; shell → session (iter 8) |
 | Local UI state | `useState` / `useReducer` | each component |
 
