@@ -1,0 +1,16 @@
+{
+  "title": "Cart",
+  "empty": "Cart is empty",
+  "loading": "Loading…",
+  "loadError": "Could not load products: {{message}}",
+  "lineTotal": "— {{value, currency(USD)}}",
+  "remove": "Remove",
+  "placeOrder": "Place order",
+  "placingOrder": "Placing order…",
+  "placeOrderError": "Could not place the order: {{message}}",
+  "orderPlaced": "Order {{orderId}} placed.",
+  "viewOrders": "View orders",
+  "continueShopping": "Continue shopping",
+  "goToCart": "Go to cart",
+  "standaloneForeignUrl": "This URL belongs to another micro-frontend. Open it in the shell."
+}

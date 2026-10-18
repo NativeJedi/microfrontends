@@ -1,0 +1,21 @@
+{
+  "title": "Marketplace shell",
+  "nav": {
+    "catalog": "Catalog",
+    "account": "Account",
+    "cart": "Cart"
+  },
+  "recentlyViewed": "Recently viewed: {{name}}",
+  "cartLoading": "Cart…",
+  "loading": "Loading…",
+  "notFound": "Page not found",
+  "theme": {
+    "switchToDark": "Switch to dark theme",
+    "switchToLight": "Switch to light theme"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "uk": "Українська"
+  }
+}

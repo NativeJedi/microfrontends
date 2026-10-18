@@ -1,0 +1,13 @@
+{
+  "title": "Catalog",
+  "loading": "Loading…",
+  "loadError": "Could not load products: {{message}}",
+  "price": "{{value, currency(USD)}}",
+  "productNotFound": "Product not found",
+  "backToCatalog": "Back to catalog",
+  "goToCart": "Go to cart",
+  "addToCart": "Add to cart",
+  "addToCartWithQuantity_one": "Add to cart ({{count}} item in cart)",
+  "addToCartWithQuantity_other": "Add to cart ({{count}} items in cart)",
+  "standaloneForeignUrl": "This URL belongs to another micro-frontend. Open it in the shell."
+}

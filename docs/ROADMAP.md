@@ -19,7 +19,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 04 | Contracts between micro-frontends | #3 | done |
 | 05 | State: TanStack Query + Zustand | #1 | done |
 | 06 | Style isolation | #6 | done |
-| 07 | i18n | #8 | todo |
+| 07 | i18n | #8 | done |
 | 08 | Auth and session | #12 | todo |
 | 09 | Resilience + manual dynamic remote loading | #10 | todo |
 | 10 | Nested micro-frontends: dashboard + widgets | new | todo |
