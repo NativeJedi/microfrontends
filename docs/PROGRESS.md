@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 08 — Auth and session (`todo`)
+**Current iteration:** 09 — Resilience + manual dynamic remote loading (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,49 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-19 — Iteration 08 — Auth and session
+- Status: done
+- Done:
+  - api: `POST /auth/login|refresh|logout` (204 + cookies). Access JWT 30s in an httpOnly `access_token` cookie;
+    opaque rotating `refresh_token` (`Path=/auth`) with reuse detection (family revoked). Global guard with
+    `@AuthMode` (orders required, products optional, auth none). A failed refresh clears the cookies.
+  - `@mf/api-client`: `createSession()` (`auth:is-logged-in` flag + `storage` event), `createApiClient(session)`
+    (`credentials: 'include'`, single-flight refresh, one retry, 401 after refresh → logout). Request functions and
+    `@mf/queries` take the client (`productQueries.list(api)`). Keys `API_CLIENT_SERVICE`, `SESSION_SERVICE`.
+  - New `@mf/services`: generic service container (string keys, `register`/`resolve`, `ServicesProvider`,
+    `useService`), an MF shared singleton in all four apps. Expose props unchanged.
+  - shell: `/login?returnTo=` (same-app paths only), `RequireAuth` on `/account/*`, Log in/Log out,
+    `useSessionCleanup` (`queryClient.clear()` + `shell:logged-out`). Cart clears its store on that event and shows
+    "Log in to place an order". Standalone cart/account: dev login.
+  - Verified in the browser:
+    - `/account` → login → back.
+    - `/orders` + `/products` 401 → one `/auth/refresh` → both retried 200.
+    - Logout in one tab logs out the other (redirect, `Cart (0)`).
+    - API restart → refresh 401 → logged out, anonymous catalog works.
+    - Cart login → return → order placed.
+    - Standalone :3001–:3003 work. One `@mf/services` in `__mfDebug()`.
+- Walkthrough: per-app refresh vs rotation (three parallel `curl` refreshes: one 204, two 401, winner revoked), context
+  or key identity across bundles, logout across tabs, cross-tab refresh race, cookies/CORS across origins and sites —
+  see `docs/notes/08-auth.md`.
+- Decisions: [ADR 0013 — auth session](decisions/0013-auth-session.md) (partly supersedes ADR 0009/0010 delivery).
+- Deviations from SPEC/ROADMAP:
+  - Access token in an httpOnly cookie, not in memory.
+  - Session = `localStorage` flag, no `/me`.
+  - Cross-tab logout via the `storage` event instead of BroadcastChannel.
+  - Services reach remotes through a shared DI container, not props or a `shell/session` expose.
+  - Acceptance "three simultaneous 401s from different apps" is **partially met**: until the dashboard (iter 10) at
+    most two apps request on one screen. Verified with two apps (account + cart) → exactly one refresh; re-check
+    with three apps in iteration 10.
+  - `/dashboard` protection moves to iteration 10 (the route does not exist yet).
+- Known issues / tech debt:
+  - No cross-tab single-flight: two tabs refreshing at once revoke the session (Web Locks or a server grace period).
+  - Refresh tokens are in memory, so an API restart logs everyone out.
+  - Dev JWT secret is a constant (runtime config in iter 13).
+  - `useService` failure without a shared `@mf/services` was not reproduced in the browser.
+- Versions: `@nestjs/jwt` 12.0.3, `cookie-parser` 1.4.7, `@types/cookie-parser` 1.4.10, `@types/express` 5.0.6;
+  `@mf/services` 1.0.0.
+- Next session starts with: iteration 09 — resilience + manual dynamic remote loading.
 
 ### 2026-10-17 — Iteration 07 — i18n
 - Status: done

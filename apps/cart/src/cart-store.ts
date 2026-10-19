@@ -1,3 +1,4 @@
+import { MF_EVENTS, subscribeToMfEvent } from '@mf/contracts';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -55,6 +56,13 @@ export const useCartStore = create<CartState>()(
     },
   ),
 );
+
+// Cart lines belong to the user who added them: when the session ends (in any tab), the cart owner resets its
+// own state. Module level, because the store lives as long as the cart container, not as long as a component.
+subscribeToMfEvent(MF_EVENTS.loggedOut, () => {
+  useCartStore.getState().clear();
+  useCartStore.getState().setMiniCartOpen(false);
+});
 
 export function selectItemCount(state: CartState): number {
   return state.lines.reduce((sum, line) => sum + line.quantity, 0);

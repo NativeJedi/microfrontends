@@ -8,6 +8,7 @@
   "placeOrder": "Place order",
   "placingOrder": "Placing order…",
   "placeOrderError": "Could not place the order: {{message}}",
+  "logInToPlaceOrder": "Log in to place an order",
   "orderPlaced": "Order {{orderId}} placed.",
   "viewOrders": "View orders",
   "continueShopping": "Continue shopping",

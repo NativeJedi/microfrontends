@@ -1,4 +1,4 @@
-import { requestJson } from './http';
+import type { ApiClient } from './http';
 
 export interface Product {
   id: string;
@@ -7,10 +7,10 @@ export interface Product {
   description: string;
 }
 
-export function getProducts(): Promise<Product[]> {
-  return requestJson<Product[]>('/products');
+export function getProducts(api: ApiClient): Promise<Product[]> {
+  return api.request<Product[]>('/products');
 }
 
-export function getProduct(productId: string): Promise<Product> {
-  return requestJson<Product>(`/products/${encodeURIComponent(productId)}`);
+export function getProduct(api: ApiClient, productId: string): Promise<Product> {
+  return api.request<Product>(`/products/${encodeURIComponent(productId)}`);
 }

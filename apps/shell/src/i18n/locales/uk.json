@@ -17,5 +17,15 @@
     "label": "Мова",
     "en": "English",
     "uk": "Українська"
+  },
+  "auth": {
+    "title": "Вхід",
+    "email": "Email",
+    "password": "Пароль",
+    "logIn": "Увійти",
+    "loggingIn": "Входимо…",
+    "logOut": "Вийти",
+    "wrongCredentials": "Неправильний email або пароль.",
+    "loginFailed": "Не вдалося увійти. Спробуйте ще раз."
   }
 }

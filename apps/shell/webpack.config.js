@@ -11,6 +11,7 @@ const reactRouterVersion = require('react-router/package.json').version;
 const reactQueryVersion = require('@tanstack/react-query/package.json').version;
 const i18nextVersion = require('i18next/package.json').version;
 const reactI18nextVersion = require('react-i18next/package.json').version;
+const servicesVersion = require('@mf/services/package.json').version;
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -100,6 +101,13 @@ module.exports = (env, argv) => {
           'react-i18next': {
             singleton: true,
             requiredVersion: `^${reactI18nextVersion}`,
+            strictVersion: false,
+          },
+          // One service container context: the shell's <ServicesProvider> must reach every remote.
+          // A workspace package, shared only because its module holds the React context identity.
+          '@mf/services': {
+            singleton: true,
+            requiredVersion: `^${servicesVersion}`,
             strictVersion: false,
           },
         },

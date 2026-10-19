@@ -4,6 +4,7 @@ import { useCartStore } from '../cart-store';
 import { useCartTranslation } from '../i18n/use-cart-translation';
 import { usePlaceOrder } from '../orders/use-place-order';
 import { useCartProducts } from '../products/use-cart-products';
+import { useIsLoggedIn } from '../session/use-is-logged-in';
 import styles from './CartPage.module.css';
 
 function PlacedOrderMessage({ orderId }: { orderId: string }) {
@@ -22,6 +23,7 @@ export default function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const { productLines, error } = useCartProducts(lines);
   const placeOrder = usePlaceOrder();
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <section>
@@ -40,7 +42,7 @@ export default function CartPage() {
           </li>
         ))}
       </ul>
-      {lines.length > 0 && (
+      {lines.length > 0 && isLoggedIn && (
         <button
           type="button"
           className={styles.button}
@@ -49,6 +51,10 @@ export default function CartPage() {
         >
           {placeOrder.isPending ? t('placingOrder') : t('placeOrder')}
         </button>
+      )}
+      {/* The login page belongs to the shell; returnTo brings the user back to the cart. */}
+      {lines.length > 0 && !isLoggedIn && (
+        <Link to={ROUTES.login(ROUTES.cart)}>{t('logInToPlaceOrder')}</Link>
       )}
       {placeOrder.error && <p>{t('placeOrderError', { message: placeOrder.error.message })}</p>}
       <p>

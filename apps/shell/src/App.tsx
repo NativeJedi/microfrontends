@@ -3,6 +3,10 @@ import { lazy, Suspense } from 'react';
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router';
 import styles from './App.module.css';
 import LanguageSwitcher from './i18n/LanguageSwitcher';
+import AuthControls from './session/AuthControls';
+import LoginPage from './session/LoginPage';
+import RequireAuth from './session/RequireAuth';
+import { useSessionCleanup } from './session/use-session-cleanup';
 import { useShellTranslation } from './i18n/use-shell-translation';
 import ThemeToggle from './theme/ThemeToggle';
 import { useRecentlyViewedProduct } from './use-recently-viewed-product';
@@ -37,6 +41,7 @@ function Header() {
         {/* The label is the shell's text, so the shell translates it; the prop contract is unchanged. */}
         <CartWidget label={t('nav.cart')} />
       </Suspense>
+      <AuthControls />
       <LanguageSwitcher />
       <ThemeToggle />
     </header>
@@ -52,6 +57,7 @@ function NotFoundPage() {
 // and the remote matches the rest of the path with its own relative <Routes>.
 export default function App() {
   const t = useShellTranslation();
+  useSessionCleanup();
 
   return (
     <div className={styles.layout}>
@@ -62,7 +68,15 @@ export default function App() {
             <Route path={ROUTES.home} element={<Navigate to={ROUTES.catalog.root} replace />} />
             <Route path={`${ROUTES.catalog.root}/*`} element={<CatalogApp />} />
             <Route path={`${ROUTES.cart}/*`} element={<CartApp />} />
-            <Route path={`${ROUTES.account.root}/*`} element={<AccountApp />} />
+            <Route
+              path={`${ROUTES.account.root}/*`}
+              element={
+                <RequireAuth>
+                  <AccountApp />
+                </RequireAuth>
+              }
+            />
+            <Route path={ROUTES.login()} element={<LoginPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
