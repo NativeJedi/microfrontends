@@ -1,5 +1,13 @@
+import {
+  API_CLIENT_SERVICE,
+  createApiClient,
+  createSession,
+  DEV_CREDENTIALS,
+  SESSION_SERVICE,
+} from '@mf/api-client';
 import { ROUTES } from '@mf/contracts';
 import { createI18n, DEFAULT_LANGUAGE } from '@mf/i18n';
+import { createServiceContainer, ServicesProvider } from '@mf/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -33,14 +41,31 @@ const queryClient = new QueryClient();
 // The language is fixed here: the shell owns language switching.
 const i18n = createI18n(DEFAULT_LANGUAGE);
 
+// Standalone only: when hosted, the remote resolves the shell's session and API client (one per page).
+const session = createSession();
+const api = createApiClient(session);
+const services = createServiceContainer();
+services.register(SESSION_SERVICE, session);
+services.register(API_CLIENT_SERVICE, api);
+
+// Standalone dev login: the login page belongs to the shell. The auth cookies are shared by all localhost
+// ports, so the API accepts them from this origin too; the session flag is per origin, hence the login here.
+if (process.env.NODE_ENV !== 'production' && !session.isLoggedIn()) {
+  await api
+    .login(DEV_CREDENTIALS)
+    .catch((error: unknown) => console.warn('Standalone dev login failed', error));
+}
+
 createRoot(container).render(
-  <QueryClientProvider client={queryClient}>
-    <I18nextProvider i18n={i18n}>
-      <BrowserRouter>
-        <Suspense fallback={null}>
-          <StandaloneRoutes />
-        </Suspense>
-      </BrowserRouter>
-    </I18nextProvider>
-  </QueryClientProvider>,
+  <ServicesProvider container={services}>
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <BrowserRouter>
+          <Suspense fallback={null}>
+            <StandaloneRoutes />
+          </Suspense>
+        </BrowserRouter>
+      </I18nextProvider>
+    </QueryClientProvider>
+  </ServicesProvider>,
 );

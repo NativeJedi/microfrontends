@@ -1,6 +1,7 @@
-import type { Order } from '@mf/api-client';
+import { API_CLIENT_SERVICE, type Order } from '@mf/api-client';
 import { ROUTES } from '@mf/contracts';
 import { orderQueries } from '@mf/queries';
+import { useService } from '@mf/services';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { useAccountTranslation } from '../i18n/use-account-translation';
@@ -33,7 +34,8 @@ function OrderRow({ order }: { order: Order }) {
 // Cart invalidates the orders key after checkout, so a new order shows up here without a reload.
 export default function OrdersPage() {
   const t = useAccountTranslation();
-  const { data: orders, isPending, error } = useQuery(orderQueries.list());
+  const api = useService(API_CLIENT_SERVICE);
+  const { data: orders, isPending, error } = useQuery(orderQueries.list(api));
 
   return (
     <section>

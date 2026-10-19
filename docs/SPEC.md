@@ -17,7 +17,7 @@ built from independently deployed widgets.
 
 | App | Path | Role | Dev port | Container name | Exposes (planned) | Introduced in |
 |---|---|---|---|---|---|---|
-| shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | (session, iter 8) | 00 |
+| shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | — (services via `@mf/services`, iter 8) | 00 |
 | catalog | `apps/catalog` | Remote: product list and product details (consumes `cart/store`) | 3001 | `catalog` | `./App` (routes; `./ProductList` until iter 3) | 00 |
 | cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./App`, `./CartWidget`, `./store` | 00 |
 | account | `apps/account` | Remote: profile, order history | 3003 | `account` | `./App` | 03 |
@@ -36,12 +36,12 @@ Container names must be valid JS identifiers (hence `widget_sales`, not `widget-
 | `/` | redirect to `/catalog` |
 | `/catalog/*` | catalog |
 | `/cart/*` | cart |
-| `/account/*` | account (protected from iter 8) |
+| `/account/*` | account (protected, iter 8) |
 | `/dashboard` | dashboard → widgets (protected from iter 8) |
-| `/login` | shell |
+| `/login?returnTo=<path>` | shell (iter 8) |
 
 Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardcoded URLs in links or redirects.
-`/login` and `/dashboard` are added in iterations 08 and 10.
+`/login` was added in iteration 08 (`ROUTES.login(returnTo?)`), `/dashboard` comes in iteration 10.
 
 ## 3. Architecture
 
@@ -63,8 +63,8 @@ Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardco
 ```
 
 Ownership rules:
-- **shell** owns: URL/history, top-level layout, auth session, QueryClient instance,
-  i18n instance, theme, Sentry init. Remotes never create these when hosted.
+- **shell** owns: URL/history, top-level layout, auth session (session + API client, registered in the service
+  container), QueryClient instance, i18n instance, theme, Sentry init. Remotes never create these when hosted.
 - **Remotes** own: their routes below their prefix, their UI, their translations (one i18n namespace each),
   their query hooks (using shared query options from `@mf/queries`), and the client state of their domain
   (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
@@ -90,7 +90,8 @@ pnpm catalogs (from iter 1).
 | Styles | CSS Modules (`css-loader`; `style-loader` in dev, `mini-css-extract-plugin` in production) + CSS custom properties (`@mf/tokens`); stylelint for remotes | iter 6, [ADR 0011](decisions/0011-style-isolation.md) |
 | i18n (internationalization) | i18next + react-i18next; one instance from shell, namespaces loaded by their owners | iter 7, [ADR 0012](decisions/0012-i18n-ownership.md) |
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
-| Auth | JWT (JSON Web Token) access token in memory + refresh token in httpOnly cookie | iter 8 |
+| Auth | JWT (JSON Web Token) access token + rotating refresh token, both in httpOnly `SameSite=Strict` cookies (`@nestjs/jwt`, `cookie-parser`) | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
+| Services to remotes | `@mf/services`: generic service container + React provider, MF shared singleton | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
 | Containers | Docker Compose + nginx | iter 13 |
 | CI | GitHub Actions | iter 13 |
 | Observability | Sentry (⚠ open decision in iter 15) | iter 15 |
@@ -119,6 +120,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 │  ├─ queries/          # @mf/queries — iter 5: query keys + queryOptions (stateless)
 │  ├─ tokens/           # @mf/tokens — iter 6: CSS custom properties (light/dark)
 │  ├─ i18n/             # @mf/i18n — iter 7: languages, createI18n, namespace loader backend (stateless)
+│  ├─ services/         # @mf/services — iter 8: generic service container (DI), MF shared singleton
 │  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
 ├─ pnpm-workspace.yaml
@@ -188,12 +190,13 @@ apps/catalog/
 ### State (iter 5, [notes](notes/05-state.md))
 - One `QueryClient`, created in the shell's `bootstrap.tsx`; `@tanstack/react-query` is an MF singleton. Remotes
   create a client only in their standalone `bootstrap.tsx`, never in `exposed/`.
-- Layers ([ADR 0010](decisions/0010-api-client-and-queries-packages.md)): `@mf/api-client` — API types and request
-  functions, no React; `@mf/queries` — key factories (`productKeys`, `orderKeys`) and `queryOptions` factories
+- Layers ([ADR 0010](decisions/0010-api-client-and-queries-packages.md)): `@mf/api-client` — API types, request
+  functions (`getOrders(api)`) and the factories `createSession` / `createApiClient`, no React; `@mf/queries` — key factories (`productKeys`, `orderKeys`) and `queryOptions` factories
   (`productQueries`, `orderQueries`): key, fetcher, response type and `staleTime` travel together; `@mf/contracts` —
   routes and events only.
-- Workspace packages are **stateless** (bundled into each app). Stateful instances (`QueryClient`, the HTTP client of
-  iter 8) are created once by the shell and reach remotes through context or expose props. Query keys are a
+- Workspace packages are **stateless** (bundled into each app). Stateful instances (`QueryClient`, the session and the
+  API client of iter 8) are created once by the shell and reach remotes through context: the QueryClient through
+  react-query's, the others through the `@mf/services` container ([ADR 0013](decisions/0013-auth-session.md)). Query keys are a
   cross-app contract (renaming one is a breaking change). Cache settings live in the query options, not in
   `QueryClient` defaults, so a remote caches the same way hosted and standalone.
 - Mutations invalidate by the owner's key factory (`orderKeys.all`); other apps refetch on their next mount.
@@ -224,6 +227,24 @@ apps/catalog/
 - Numbers, currency, dates and plurals go through i18next's `Intl` formatters (`{{value, currency(USD)}}`,
   `{{value, datetime}}`, `_one/_few/_many/_other`), never hand-formatted. API content is not translated.
 
+### Auth and services (iter 8, [notes](notes/08-auth.md), [ADR 0013](decisions/0013-auth-session.md))
+- Tokens live only in httpOnly cookies set by the API (`access_token` `Path=/`, `refresh_token` `Path=/auth`,
+  `SameSite=Strict`). JS never reads a token; every request uses `credentials: 'include'`. Apps and API must stay on
+  one site (iteration 13).
+- The only session state in JS is the flag `auth:is-logged-in` in `localStorage` (`createSession()`): a UI hint, never
+  an authorization decision. Rule: 401 → one single-flight refresh → one retry; refresh failed or retry 401 → session
+  ends.
+- One session and one API client per page: created in the shell's `bootstrap.tsx`, registered in a
+  `createServiceContainer()` under the keys `SESSION_SERVICE` / `API_CLIENT_SERVICE`, provided with
+  `<ServicesProvider>`. Remotes call `useService(key)` and never create them in `exposed/`; standalone bootstraps
+  create their own (dev login with `DEV_CREDENTIALS`).
+- `@mf/services` is generic: it knows no concrete service. Keys are strings (`defineServiceKey<T>(name)`), because
+  objects differ per bundle. Key names are a cross-app contract. A new service is a new key (additive).
+- Session end, any cause, any tab (`storage` event) → the shell clears the query cache and dispatches
+  `shell:logged-out`; every app with user-specific client state resets it (cart clears its store).
+- Route guards (`RequireAuth`) are UX only; the API protects data (global guard, `@AuthMode`). `returnTo` accepts
+  only same-app absolute paths.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -242,6 +263,7 @@ extended by later iterations:
 | react-router | ✅ | `^` + installed version | ❌ (warn) | ❌ | router context must be single (iter 3) |
 | @tanstack/react-query | ✅ | `^` + installed version | ❌ (warn) | ❌ | one QueryClient context (iter 5) |
 | i18next, react-i18next | ✅ | `^` + installed version | ❌ (warn) | ❌ | one i18n instance (iter 7) |
+| @mf/services (workspace) | ✅ | `^` + its `package.json` version | ❌ (warn) | ❌ | one service container context (iter 8) |
 
 Rules:
 - Every option is written explicitly in each `webpack.config.js`. `requiredVersion` is
@@ -252,6 +274,8 @@ Rules:
 - No `eager` and async bootstrap everywhere (section 6).
 - Utility libraries (lodash, date-fns, etc.) are **not shared** by default: shared modules
   are not tree-shaken, so sharing a big utility lib can cost more than duplicating the parts used.
+- Workspace packages are not shared, except `@mf/services`: its module holds a React context, whose identity must be
+  one per page (iter 8). It exports `./package.json` for `requiredVersion`.
 - Store libraries are not shared: store identity comes from the owner's exposed module (`cart/store`), and only the
   owner imports `zustand` (iter 5, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - Dev-only `window.__mfDebug()` in shell prints the share scope (package, version, provider, loaded).
@@ -261,7 +285,8 @@ Rules:
 | Kind | Tool | Owner |
 |---|---|---|
 | Server state / cache (products, orders, widgets data) | TanStack Query, single `QueryClient` | shell creates the client; key factories and query options in `packages/queries`, requests in `packages/api-client`; data owned by the API |
-| Client shared state (cart items, mini-cart open; session snapshot in iter 8) | Zustand, one instance in the owner's container | owner app exposes functions: cart → `cart/store`; shell → session (iter 8) |
+| Client shared state (cart items, mini-cart open) | Zustand, one instance in the owner's container | owner app exposes functions: cart → `cart/store` |
+| Session (logged-in flag) | `createSession()`: `localStorage` flag + `useSyncExternalStore` | shell creates it, remotes resolve `SESSION_SERVICE` (iter 8) |
 | Local UI state | `useState` / `useReducer` | each component |
 
 ## 9. Environments and config
@@ -271,7 +296,10 @@ Rules:
 - From iter 13: one build artifact per app, environment config injected at runtime
   (never baked in with build-time env vars).
 - API base URL `http://localhost:4000` in dev. CORS allows the dev ports with credentials.
-  Note: cookies are not port-scoped, so all `localhost:*` apps share them.
+  Cookies are not port-scoped and all `localhost:*` ports are one site, so every app sends the auth cookies.
+  `localStorage` is per origin: a standalone remote keeps its own session flag.
+- Dev demo user: `services/api/src/auth/users.ts` (mirrored in `packages/api-client/src/dev-credentials.ts`).
+  Access token TTL 30s (dev demo value).
 
 ## 10. Commands
 

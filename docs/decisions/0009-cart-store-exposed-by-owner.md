@@ -1,6 +1,6 @@
 # 0009 — Cart state is a Zustand store owned by cart and exposed as `cart/store`
 
-- Status: accepted
+- Status: accepted (session delivery: superseded by [0013](0013-auth-session.md))
 - Date: 2026-10-15
 - Iteration: 05
 

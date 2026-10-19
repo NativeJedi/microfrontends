@@ -1,6 +1,12 @@
-// Plain functions, no module-level state: bundled into every app that imports them.
-// The stateful client of iteration 08 (token, single-flight refresh) is created by the shell from a factory here
-// and passed to remotes through props, so it stays one instance per page (ADR 0010).
+// Plain functions and factories, no module-level state: bundled into every app that imports them.
+// The stateful instances (session, API client) are created once by the shell's bootstrap and reach remotes
+// through the @mf/services container, so they stay one instance per page.
+export { createSession } from './session';
+export type { Session } from './session';
+export { createApiClient, HttpError } from './http';
+export type { ApiClient, Credentials } from './http';
+export { DEV_CREDENTIALS } from './dev-credentials';
+export { API_CLIENT_SERVICE, SESSION_SERVICE } from './service-keys';
 export { getProduct, getProducts } from './products';
 export type { Product } from './products';
 export { createOrder, getOrders } from './orders';

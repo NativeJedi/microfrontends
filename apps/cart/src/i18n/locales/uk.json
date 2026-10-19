@@ -8,6 +8,7 @@
   "placeOrder": "Оформити замовлення",
   "placingOrder": "Оформлюємо замовлення…",
   "placeOrderError": "Не вдалося оформити замовлення: {{message}}",
+  "logInToPlaceOrder": "Увійдіть, щоб оформити замовлення",
   "orderPlaced": "Замовлення {{orderId}} оформлено.",
   "viewOrders": "Переглянути замовлення",
   "continueShopping": "Продовжити покупки",

@@ -9,8 +9,10 @@
     "lint": "eslint . && stylelint \"src/**/*.css\""
   },
   "dependencies": {
+    "@mf/api-client": "workspace:*",
     "@mf/contracts": "workspace:*",
     "@mf/i18n": "workspace:*",
+    "@mf/services": "workspace:*",
     "@mf/tokens": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "i18next": "catalog:",

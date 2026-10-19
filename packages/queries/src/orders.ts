@@ -1,4 +1,4 @@
-import { getOrders } from '@mf/api-client';
+import { type ApiClient, getOrders } from '@mf/api-client';
 import { queryOptions } from '@tanstack/react-query';
 import { STALE_TIME_MS } from './stale-time';
 
@@ -8,10 +8,10 @@ export const orderKeys = {
 };
 
 export const orderQueries = {
-  list: () =>
+  list: (api: ApiClient) =>
     queryOptions({
       queryKey: orderKeys.list(),
-      queryFn: getOrders,
+      queryFn: () => getOrders(api),
       staleTime: STALE_TIME_MS,
     }),
 };
