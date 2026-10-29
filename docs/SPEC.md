@@ -121,7 +121,7 @@ typescript-eslint and eslint-plugin-react support TypeScript 7 / ESLint 10.
 │  ├─ tokens/           # @mf/tokens — iter 6: CSS custom properties (light/dark)
 │  ├─ i18n/             # @mf/i18n — iter 7: languages, createI18n, namespace loader backend (stateless)
 │  ├─ services/         # @mf/services — iter 8: generic service container (DI), MF shared singleton
-│  ├─ mf-runtime/       # iter 9: loadRemote(), remote config
+│  ├─ mf-runtime/       # @mf/runtime — iter 9: loadRemote(), runtime remote config, RemoteSlot
 │  └─ dev-harness/      # iter 14: standalone providers for remotes
 ├─ pnpm-workspace.yaml
 ├─ turbo.json
@@ -245,6 +245,31 @@ apps/catalog/
 - Route guards (`RequireAuth`) are UX only; the API protects data (global guard, `@AuthMode`). `returnTo` accepts
   only same-app absolute paths.
 
+### Remote loading and resilience (iter 9, [notes](notes/09-resilience.md), [ADR 0014](decisions/0014-manual-dynamic-remote-loading.md))
+- Hosts declare **no `remotes`** in `webpack.config.js`. `@mf/runtime`'s `loadRemote(remote, module)`
+  performs the container protocol by hand: inject `remoteEntry.js` → read `window[scope]` →
+  `__webpack_init_sharing__('default')` → `container.init(__webpack_share_scopes__.default)` →
+  `container.get(module)`. `shared` stays in every config: it is what fills that share scope.
+- Remote URLs live in a **runtime registry the host serves**, never in a bundle: `remotes.json`
+  (`{ "<name>": { "scope", "url", "timeoutMs?" } }`), fetched with `cache: 'no-store'` and narrowed
+  on load like any untrusted input. `scope` is the remote's container `name`. The shell serves
+  `public/remotes.json` (`devServer.static` with `watch: false`, so editing it does not reload the
+  page) and emits it next to the bundle in a production build as a default for deployment to replace.
+- Every remote is mounted through `<RemoteSlot>`: one error boundary plus one Suspense boundary per
+  remote, with `pending` and a `fallback(state)` supplied by the host (the host owns the wording and
+  the translations). A remote that is down costs its own slot and nothing else; where a reduced UI is
+  better than a hole, the fallback degrades (the header keeps the cart link, drops the live count).
+- Failures surface as `RemoteLoadError` with a `reason` (`config`, `unknown-remote`, `script`,
+  `timeout`, `container-missing`, `init`, `get`, `evaluate`). Only `config`, `script` and `timeout`
+  are retried automatically (one retry, 300 ms, doubling); the rest are deploy mistakes. A rejected
+  attempt is never cached. `isChunkLoadError` switches the fallback from "Retry" to a page reload,
+  because a container already in memory cannot be replaced.
+- `@mf/runtime` is bundled into each host and **not** MF-shared: each host owns its registry and its
+  caches. Hosts call `configureRemotes({ configUrl })` once, in `bootstrap.tsx`.
+- Types still come from the remotes' packages: they stay `devDependencies` and the host imports their
+  declarations with `import type` (erased, so webpack never sees the specifier), keeping the
+  compile-time contract of ADR 0008.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -275,7 +300,8 @@ Rules:
 - Utility libraries (lodash, date-fns, etc.) are **not shared** by default: shared modules
   are not tree-shaken, so sharing a big utility lib can cost more than duplicating the parts used.
 - Workspace packages are not shared, except `@mf/services`: its module holds a React context, whose identity must be
-  one per page (iter 8). It exports `./package.json` for `requiredVersion`.
+  one per page (iter 8). It exports `./package.json` for `requiredVersion`. `@mf/runtime` (iter 9) is deliberately
+  **not** shared: one loader and one registry per host is the wanted behaviour, not a problem to fix.
 - Store libraries are not shared: store identity comes from the owner's exposed module (`cart/store`), and only the
   owner imports `zustand` (iter 5, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
 - Dev-only `window.__mfDebug()` in shell prints the share scope (package, version, provider, loaded).
@@ -291,8 +317,8 @@ Rules:
 
 ## 9. Environments and config
 
-- Dev: every app on its own port (section 2). Remote URLs: static in shell config until iter 9,
-  then runtime `remotes.json` / API registry.
+- Dev: every app on its own port (section 2). Remote URLs come from the host's runtime registry
+  (`remotes.json`, iter 9); the widget registry of iteration 10 is the API's equivalent for the dashboard.
 - From iter 13: one build artifact per app, environment config injected at runtime
   (never baked in with build-time env vars).
 - API base URL `http://localhost:4000` in dev. CORS allows the dev ports with credentials.

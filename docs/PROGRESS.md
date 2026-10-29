@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 09 — Resilience + manual dynamic remote loading (`todo`)
+**Current iteration:** 10 — Nested micro-frontends: dashboard + widgets (`todo`)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,59 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-29 — Iteration 09 — Resilience + manual dynamic remote loading
+- Status: done
+- Done:
+  - New `@mf/runtime` (`packages/mf-runtime`): `loadRemote(remote, module)` over the container
+    protocol by hand (inject `remoteEntry.js` → `window[scope]` → `__webpack_init_sharing__` →
+    `container.init` → `container.get` → `await factory()`), per-registry/container/module promise
+    caches that never keep a rejection, 8 s timeout (`timeoutMs` per remote), one retry with
+    backoff for transient reasons only, `RemoteLoadError` with a `reason`, `isChunkLoadError`,
+    `resetRemotes` (drops the registry too, so a moved remote is picked up on retry).
+  - Headless `RemoteSlot` (error boundary + Suspense + a new `React.lazy` per retry) and
+    `RemoteErrorBoundary`; the host supplies `pending` and `fallback(state)`.
+  - shell: `remotes` removed from `webpack.config.js`; `configureRemotes({ configUrl: '/remotes.json' })`
+    in `bootstrap.tsx`; `public/remotes.json` served in dev (`devServer.static`, `watch: false`) and
+    emitted into `dist/` in production by a ~20-line inline plugin. `grep` finds no remote URL in
+    `apps/shell/dist/*.js`.
+  - shell UI: `RemoteFallback` (name, `reason: message`, Retry / Reload the page) + `CartSlot`,
+    which degrades to a plain cart link without the counter. `remote.*` keys in `en`/`uk`.
+  - Types kept: remotes stay `devDependencies`, `src/remotes/remote-props.ts` reads their
+    declarations with `import type`.
+- Walkthrough: unreachable remote, timeout, wrong container name / missing registry entry, module
+  evaluation error, render error, ChunkLoadError → reload, two share scopes, and the dev server
+  hiding it all — see `docs/notes/09-resilience.md`.
+- Decisions: [ADR 0014 — manual dynamic remote loading](decisions/0014-manual-dynamic-remote-loading.md).
+- Deviations from SPEC/ROADMAP:
+  - Package is named `@mf/runtime` (folder stays `packages/mf-runtime`): `@mf/mf-runtime` reads badly
+    at every import.
+  - `devServer.static.watch: false` in the shell, otherwise editing the registry live-reloads the page
+    and hides the Retry path.
+  - Two extra failure reasons beyond the ROADMAP list (`unknown-remote`, `container-missing`), both
+    config mistakes that are easy to hit and cheap to report precisely.
+- Verified in the browser (the running dev servers could not be restarted, so the parts that depend on
+  the new `devServer` config were checked on a second shell instance on :3010):
+  - Baseline: `/remotes.json` fetched once, both remote entries injected, `__mfDebug()` shows one copy
+    of all seven shared packages, all `providedBy: shell`.
+  - cart → `:3999` (connection refused): header degrades to a plain link, catalog/login/theme keep
+    working, `/cart` shows `script: …`; registry restored → **Retry** recovers both slots with no reload.
+  - catalog → a server that never answers, `timeoutMs: 1500` → `timeout: …`, header unaffected.
+  - `unknown-remote` (entry removed) and `container-missing` (`scope: catalog_v2`) reported exactly.
+  - Short local experiments, reverted, never committed: module-scope throw → `evaluate: …`; render
+    throw → the message with no reason prefix; `name = 'ChunkLoadError'` → fallback offers **Reload the
+    page**.
+- Known issues / tech debt:
+  - catalog still reaches `cart/store` through a **static** remote in its own `webpack.config.js`
+    (ADR 0009), so that one edge is still build-time coupled and bypasses the registry. A store's
+    functions are needed synchronously, so making it dynamic would push a loading state into every
+    component that adds to cart. Revisit with iteration 13.
+  - A container already on `window` cannot be replaced, so a changed URL only affects remotes that have
+    not loaded yet; `ChunkLoadError` falls back to a page reload for the same reason.
+  - `pnpm dev` must be restarted once after this iteration: `apps/shell/webpack.config.js` changed.
+- Next session starts with: iteration 10 — scaffold `apps/dashboard` (:3004) as a remote of the shell
+  and a host of its own, then agree with the user what the three widgets actually show before writing
+  their UI.
 
 ### 2026-10-19 — Iteration 08 — Auth and session
 - Status: done

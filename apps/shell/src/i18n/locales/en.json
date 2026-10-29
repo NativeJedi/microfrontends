@@ -9,6 +9,12 @@
   "cartLoading": "Cart…",
   "loading": "Loading…",
   "notFound": "Page not found",
+  "remote": {
+    "unavailable": "{{name}} is unavailable right now.",
+    "retry": "Retry",
+    "reload": "Reload the page",
+    "cartDegraded": "The cart counter is unavailable. The cart page still works."
+  },
   "theme": {
     "switchToDark": "Switch to dark theme",
     "switchToLight": "Switch to light theme"

@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -12,6 +13,34 @@ const reactQueryVersion = require('@tanstack/react-query/package.json').version;
 const i18nextVersion = require('i18next/package.json').version;
 const reactI18nextVersion = require('react-i18next/package.json').version;
 const servicesVersion = require('@mf/services/package.json').version;
+
+// Ships public/remotes.json next to the bundle in a production build. In development the file is
+// served straight from disk by devServer.static, so editing a remote URL needs no rebuild — which
+// is the whole point: remote URLs are deployment config, not build output.
+class EmitRemotesConfigPlugin {
+  constructor(sourcePath) {
+    this.sourcePath = sourcePath;
+  }
+
+  apply(compiler) {
+    const { Compilation, sources } = compiler.webpack;
+    compiler.hooks.thisCompilation.tap('EmitRemotesConfigPlugin', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'EmitRemotesConfigPlugin',
+          stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+        },
+        () => {
+          compilation.fileDependencies.add(this.sourcePath);
+          compilation.emitAsset(
+            'remotes.json',
+            new sources.RawSource(fs.readFileSync(this.sourcePath)),
+          );
+        },
+      );
+    });
+  }
+}
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -71,12 +100,9 @@ module.exports = (env, argv) => {
     plugins: [
       new ModuleFederationPlugin({
         name: 'shell',
-        // Static remote URLs for now; they become runtime config in iteration 09.
-        remotes: {
-          catalog: 'catalog@http://localhost:3001/remoteEntry.js',
-          cart: 'cart@http://localhost:3002/remoteEntry.js',
-          account: 'account@http://localhost:3003/remoteEntry.js',
-        },
+        // No `remotes` here on purpose (iteration 09): remote URLs come from public/remotes.json
+        // at runtime and are resolved by @mf/runtime's loadRemote(). `shared` still matters — it
+        // is what fills the share scope that every container is initialized with.
         shared: {
           react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
           'react-dom': {
@@ -113,11 +139,22 @@ module.exports = (env, argv) => {
         },
       }),
       new HtmlWebpackPlugin({ template: './public/index.html' }),
-      ...(isProduction ? [new MiniCssExtractPlugin()] : []),
+      ...(isProduction
+        ? [
+            new MiniCssExtractPlugin(),
+            new EmitRemotesConfigPlugin(path.resolve(__dirname, 'public/remotes.json')),
+          ]
+        : []),
     ],
     devServer: {
       port: 3000,
       historyApiFallback: true,
+      // Serves public/remotes.json as-is: a changed remote URL takes effect without a rebuild.
+      // historyApiFallback leaves it alone because the request has a file extension.
+      // watch: false on purpose — the default reloads the page whenever a file in public/ changes,
+      // which would quietly turn "edit the registry, then retry the slot" into a full reload and
+      // hide the behaviour this iteration is about. Nothing watches this file in production either.
+      static: { directory: path.resolve(__dirname, 'public'), watch: false },
       headers: { 'Access-Control-Allow-Origin': '*' },
     },
   };

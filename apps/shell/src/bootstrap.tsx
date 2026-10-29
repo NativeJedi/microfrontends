@@ -5,6 +5,7 @@ import {
   SESSION_SERVICE,
 } from '@mf/api-client';
 import { createI18n } from '@mf/i18n';
+import { configureRemotes } from '@mf/runtime';
 import { createServiceContainer, ServicesProvider } from '@mf/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
@@ -15,6 +16,11 @@ import '@mf/tokens/tokens.css';
 import './global.css';
 import App from './App';
 import { readStoredLanguage } from './i18n/use-language';
+
+// Where the remotes live is runtime config, not build config: the shell serves remotes.json and
+// @mf/runtime fetches it on the first loadRemote(). Moving a remote to another host is a change to
+// that file plus a reload — no rebuild of the shell, and no remote URL in webpack.config.js.
+configureRemotes({ configUrl: '/remotes.json' });
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root not found');
