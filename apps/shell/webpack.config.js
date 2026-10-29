@@ -23,9 +23,11 @@ module.exports = (env, argv) => {
     entry: './src/index.ts',
     output: {
       path: path.resolve(__dirname, 'dist'),
-      // The shell is always served from the site root. 'auto' would make index.html load
-      // a relative "main.js", which breaks on refresh of a nested URL such as /catalog/p1.
-      publicPath: '/',
+      // 'auto' since the shell became a remote too: its `remoteEntry.js` and the chunks behind it are
+      // loaded by widgets running on another origin, and those chunks must come from :3000, not from the
+      // widget's own page. The absolute "/main.js" that a refresh of /catalog/p1 needs is set on
+      // HtmlWebpackPlugin instead (see docs/notes/10-nested.md).
+      publicPath: 'auto',
       uniqueName: 'shell',
       clean: true,
     },
@@ -71,8 +73,18 @@ module.exports = (env, argv) => {
     plugins: [
       new ModuleFederationPlugin({
         name: 'shell',
+        // The shell is a host *and* a remote: it publishes the dashboard filter it owns. The container
+        // graph is therefore circular — shell → dashboard → widget_orders → shell (ADR 0016).
+        filename: 'remoteEntry.js',
+        exposes: {
+          './store': './src/exposed/store.ts',
+        },
         // Static remote URLs for now; they become runtime config in iteration 09.
         remotes: {
+          // The shell's own container. Its main bundle and its remoteEntry.js are two webpack runtimes
+          // with two module caches, so the only way for the shell's own components to share one store
+          // instance with the widgets is to go through the container as everybody else does.
+          shell: 'shell@http://localhost:3000/remoteEntry.js',
           catalog: 'catalog@http://localhost:3001/remoteEntry.js',
           cart: 'cart@http://localhost:3002/remoteEntry.js',
           account: 'account@http://localhost:3003/remoteEntry.js',
@@ -114,7 +126,16 @@ module.exports = (env, argv) => {
           },
         },
       }),
-      new HtmlWebpackPlugin({ template: './public/index.html' }),
+      // publicPath '/' only for the page: a refresh of /catalog/p1 must load /main.js, not ./main.js.
+      // excludeChunks: the container entry must NOT be a <script> on this page. It is loaded on demand under
+      // its absolute URL (`shell@http://localhost:3000/remoteEntry.js`), and webpack dedupes script tags by
+      // their exact `src`: a tag with `/remoteEntry.js` would not match, so the file would execute twice and
+      // the page would end up with two `shell` containers — two module caches, two stores (ADR 0016).
+      new HtmlWebpackPlugin({
+        template: './public/index.html',
+        publicPath: '/',
+        excludeChunks: ['shell'],
+      }),
       ...(isProduction ? [new MiniCssExtractPlugin()] : []),
     ],
     devServer: {

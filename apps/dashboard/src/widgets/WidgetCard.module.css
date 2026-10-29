@@ -33,6 +33,13 @@
   font-size: 1rem;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--mf-space-2, 8px);
+  font-size: 0.85rem;
+}
+
 .sizeLabel {
   display: flex;
   align-items: center;
