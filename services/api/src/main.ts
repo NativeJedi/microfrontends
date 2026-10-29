@@ -12,6 +12,11 @@ const DEV_ORIGINS = [
   'http://localhost:3001',
   'http://localhost:3002',
   'http://localhost:3003',
+  'http://localhost:3004',
+  // Dashboard widgets, each running standalone on its own port (iteration 10).
+  'http://localhost:3011',
+  'http://localhost:3012',
+  'http://localhost:3013',
 ];
 
 async function bootstrap() {

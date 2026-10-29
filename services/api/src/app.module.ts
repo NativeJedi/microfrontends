@@ -10,6 +10,10 @@ import { OrdersController } from './orders/orders.controller';
 import { OrdersService } from './orders/orders.service';
 import { ProductsController } from './products/products.controller';
 import { ProductsService } from './products/products.service';
+import { ReviewsController } from './reviews/reviews.controller';
+import { ReviewsService } from './reviews/reviews.service';
+import { DashboardLayoutController, WidgetsController } from './widgets/widgets.controller';
+import { WidgetsService } from './widgets/widgets.service';
 
 @Module({
   imports: [
@@ -18,12 +22,21 @@ import { ProductsService } from './products/products.service';
       signOptions: { expiresIn: ACCESS_TOKEN_TTL_SECONDS },
     }),
   ],
-  controllers: [AuthController, ProductsController, OrdersController],
+  controllers: [
+    AuthController,
+    ProductsController,
+    OrdersController,
+    ReviewsController,
+    WidgetsController,
+    DashboardLayoutController,
+  ],
   providers: [
     AuthService,
     RefreshTokensService,
     ProductsService,
     OrdersService,
+    ReviewsService,
+    WidgetsService,
     { provide: APP_GUARD, useClass: AccessTokenGuard },
   ],
 })

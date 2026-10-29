@@ -1,0 +1,13 @@
+{
+  "title": "Sales",
+  "period_one": "Last {{count}} day",
+  "period_other": "Last {{count}} days",
+  "revenue": "{{value, currency(USD)}}",
+  "orderCount_one": "{{count}} order",
+  "orderCount_other": "{{count}} orders",
+  "bucketLabel": "{{from}}–{{to}} days ago",
+  "bucketBar": "Revenue {{from}}–{{to}} days ago",
+  "loading": "Loading sales…",
+  "loadError": "Could not load sales: {{message}}",
+  "empty": "No orders in this period."
+}

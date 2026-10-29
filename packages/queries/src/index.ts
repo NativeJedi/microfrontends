@@ -4,3 +4,5 @@
 // The API client is a parameter, not part of the key: there is one instance per page (from @mf/services).
 export { productKeys, productQueries } from './products';
 export { orderKeys, orderQueries } from './orders';
+export { reviewKeys, reviewQueries } from './reviews';
+export { widgetKeys, widgetQueries } from './widgets';

@@ -1,0 +1,17 @@
+{
+  "title": "Продажі",
+  "period_one": "Останній {{count}} день",
+  "period_few": "Останні {{count}} дні",
+  "period_many": "Останні {{count}} днів",
+  "period_other": "Останні {{count}} дня",
+  "revenue": "{{value, currency(USD)}}",
+  "orderCount_one": "{{count}} замовлення",
+  "orderCount_few": "{{count}} замовлення",
+  "orderCount_many": "{{count}} замовлень",
+  "orderCount_other": "{{count}} замовлення",
+  "bucketLabel": "{{from}}–{{to}} днів тому",
+  "bucketBar": "Виручка {{from}}–{{to}} днів тому",
+  "loading": "Завантажуємо продажі…",
+  "loadError": "Не вдалося завантажити продажі: {{message}}",
+  "empty": "Немає замовлень за цей період."
+}

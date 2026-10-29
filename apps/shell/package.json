@@ -29,6 +29,7 @@
     "cart": "workspace:*",
     "catalog": "workspace:*",
     "css-loader": "catalog:",
+    "dashboard": "workspace:*",
     "html-webpack-plugin": "catalog:",
     "mini-css-extract-plugin": "catalog:",
     "style-loader": "catalog:",

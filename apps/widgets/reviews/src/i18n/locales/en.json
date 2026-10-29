@@ -1,0 +1,10 @@
+{
+  "title": "Reviews",
+  "subtitle": "Rated {{minRating}} and up",
+  "average": "Average {{value, number(maximumFractionDigits: 1)}}",
+  "rating": "{{rating}} out of 5",
+  "by": "by {{author}}",
+  "loading": "Loading reviews…",
+  "loadError": "Could not load reviews: {{message}}",
+  "empty": "No reviews match this filter."
+}

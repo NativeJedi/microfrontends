@@ -1,0 +1,16 @@
+{
+  "title": "Останні замовлення",
+  "subtitle_one": "Найновіше замовлення",
+  "subtitle_few": "{{count}} найновіші замовлення",
+  "subtitle_many": "{{count}} найновіших замовлень",
+  "subtitle_other": "{{count}} найновішого замовлення",
+  "placedAt": "{{value, datetime}}",
+  "total": "{{value, currency(USD)}}",
+  "itemCount_one": "{{count}} позиція",
+  "itemCount_few": "{{count}} позиції",
+  "itemCount_many": "{{count}} позицій",
+  "itemCount_other": "{{count}} позиції",
+  "loading": "Завантажуємо замовлення…",
+  "loadError": "Не вдалося завантажити замовлення: {{message}}",
+  "empty": "Замовлень ще немає."
+}

@@ -1,8 +1,12 @@
 // Remotes may not ship global CSS: on one page it would restyle the shell and the other remotes,
 // and the result would depend on which chunk loaded last. Global styles live in the shell
-// (reset) and in @mf/tokens (custom properties).
-const REMOTES = 'apps/{catalog,cart,account}';
+// (reset) and in @mf/tokens (custom properties). Dashboard widgets are remotes too — of the
+// dashboard rather than of the shell, but they land on the same page, so the same rules apply.
+const REMOTES = ['apps/{catalog,cart,account,dashboard}', 'apps/widgets/*'];
 const GLOBAL_IN_REMOTE = 'is global; remotes style only their own CSS Module classes';
+
+const moduleCss = REMOTES.map((remote) => `${remote}/**/*.module.css`);
+const plainCss = REMOTES.map((remote) => `${remote}/**/!(*.module).css`);
 
 module.exports = {
   rules: {
@@ -12,7 +16,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: [`${REMOTES}/**/*.module.css`],
+      files: moduleCss,
       rules: {
         'selector-max-type': [0, { message: `Type selector ${GLOBAL_IN_REMOTE}` }],
         'selector-max-universal': [0, { message: `Universal selector ${GLOBAL_IN_REMOTE}` }],
@@ -30,7 +34,7 @@ module.exports = {
     },
     {
       // Without the .module.css suffix css-loader does not scope class names at all.
-      files: [`${REMOTES}/**/!(*.module).css`],
+      files: plainCss,
       rules: {
         'selector-disallowed-list': [
           ['/./'],

@@ -76,6 +76,8 @@ module.exports = (env, argv) => {
           catalog: 'catalog@http://localhost:3001/remoteEntry.js',
           cart: 'cart@http://localhost:3002/remoteEntry.js',
           account: 'account@http://localhost:3003/remoteEntry.js',
+          // A remote that is itself a host: it loads the widgets with the share scope it gets here.
+          dashboard: 'dashboard@http://localhost:3004/remoteEntry.js',
         },
         shared: {
           react: { singleton: true, requiredVersion: `^${reactVersion}`, strictVersion: false },
