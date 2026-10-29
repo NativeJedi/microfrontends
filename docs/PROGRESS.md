@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 09 — Resilience + manual dynamic remote loading (`todo`)
+**Current iteration:** 10 — Nested micro-frontends: dashboard + widgets (`todo`; 09 deferred, see the latest entry)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,28 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-29 — Iteration 09 — Resilience + manual dynamic remote loading
+- Status: deferred — implemented on a branch, not merged
+- Done:
+  - Implemented and verified on branch `feat/iteration-09-resilience` (commit `0d95530`, PR open, not merged):
+    `@mf/runtime` with a hand-written `loadRemote`, runtime `remotes.json`, `RemoteSlot` per remote,
+    ADR 0014 and `docs/notes/09-resilience.md`. None of it is on `main`.
+  - `main` keeps the static `remotes` of iteration 08.
+- Walkthrough: done in the session; the notes exist only on the branch.
+- Decisions: the user deferred the iteration — the hand-written runtime (~380 lines of code, roughly half of
+  it beyond the ROADMAP scope) was judged over-engineered for now. Postponed rather than simplified.
+- Deviations from SPEC/ROADMAP:
+  - Iteration 09 skipped for now; iteration 10 starts on static remotes.
+  - SPEC still describes the iteration-09 plan (`mf-runtime`, runtime `remotes.json`); unchanged on purpose.
+- Known issues / tech debt:
+  - Iteration 10 depends on `loadRemote`: with static remotes its criterion "adding a registry entry (no
+    dashboard rebuild) shows a new widget" and the per-widget timeout cannot be met. Record them as not met
+    in iteration 10, do not weaken them.
+  - Still open from iteration 08: re-check "three simultaneous 401s → one refresh" with three apps on one
+    screen, and protect `/dashboard`.
+- Next session starts with: iteration 10 on static remotes — confirm with the user what the three widgets
+  show before writing their UI. If 09 is revisited, start from the branch.
 
 ### 2026-10-19 — Iteration 08 — Auth and session
 - Status: done
