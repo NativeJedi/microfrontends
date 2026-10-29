@@ -12,6 +12,7 @@
     "@mf/api-client": "workspace:*",
     "@mf/contracts": "workspace:*",
     "@mf/i18n": "workspace:*",
+    "@mf/runtime": "workspace:*",
     "@mf/services": "workspace:*",
     "@mf/tokens": "workspace:*",
     "@tanstack/react-query": "catalog:",

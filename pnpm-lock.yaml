@@ -332,6 +332,9 @@ importers:
       '@mf/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@mf/runtime':
+        specifier: workspace:*
+        version: link:../../packages/mf-runtime
       '@mf/services':
         specifier: workspace:*
         version: link:../../packages/services
@@ -419,6 +422,16 @@ importers:
       react-i18next:
         specifier: 'catalog:'
         version: 17.0.20(i18next@26.4.7(typescript@6.0.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+
+  packages/mf-runtime:
+    dependencies:
+      react:
+        specifier: 'catalog:'
+        version: 19.3.0
     devDependencies:
       '@types/react':
         specifier: 'catalog:'

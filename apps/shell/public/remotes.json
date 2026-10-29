@@ -1,0 +1,5 @@
+{
+  "catalog": { "scope": "catalog", "url": "http://localhost:3001/remoteEntry.js" },
+  "cart": { "scope": "cart", "url": "http://localhost:3002/remoteEntry.js" },
+  "account": { "scope": "account", "url": "http://localhost:3003/remoteEntry.js" }
+}
