@@ -28,5 +28,10 @@
     "logOut": "Log out",
     "wrongCredentials": "Wrong email or password.",
     "loginFailed": "Could not log in. Try again."
+  },
+  "period": {
+    "label": "Period",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
   }
 }

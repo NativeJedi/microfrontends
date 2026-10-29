@@ -7,6 +7,7 @@ const { ModuleFederationPlugin } = require('webpack').container;
 // cannot infer requiredVersion from it. Take the installed version instead.
 const reactVersion = require('react/package.json').version;
 const reactDomVersion = require('react-dom/package.json').version;
+const reactRouterVersion = require('react-router/package.json').version;
 const reactQueryVersion = require('@tanstack/react-query/package.json').version;
 const i18nextVersion = require('i18next/package.json').version;
 const reactI18nextVersion = require('react-i18next/package.json').version;
@@ -96,6 +97,13 @@ module.exports = (env, argv) => {
           'react-dom': {
             singleton: true,
             requiredVersion: `^${reactDomVersion}`,
+            strictVersion: false,
+          },
+          // One router instance: the dashboard is a router level of its own now (descendant <Routes>
+          // under the shell's /dashboard/*), so it must read the shell's location, not a second history.
+          'react-router': {
+            singleton: true,
+            requiredVersion: `^${reactRouterVersion}`,
             strictVersion: false,
           },
           // One QueryClient context and one cache: two widgets asking for /orders make one request.

@@ -322,10 +322,30 @@ different origins/subdomains.
 - One share scope across all three levels; dashboard declares the same singletons.
 - Each widget: own error boundary + timeout. Widgets use the shared `QueryClient`.
 
+**Scope — extension: a widget that is a whole application** (added mid-iteration at the user's request)
+- `widget_orders` exposes `./App` next to `./Widget`: descendant `<Routes>` with a list and an order details page
+  ([ADR 0017](decisions/0017-widget-as-application.md)). `react-router` becomes a shared singleton in the dashboard
+  and in that widget.
+- Three routing levels: shell `/dashboard/*` → dashboard `:widgetId/*` → widget `index` / `:orderId`.
+  `ROUTES.dashboard` becomes an object (`root`, `widget(id)`, `order(id)`); the dashboard mounts a widget's app
+  generically and renders the "Open" link on the card itself.
+- State from the shell to a widget: the shell owns the dashboard's period filter (7/30/90 days) in a Zustand store,
+  exposes it as `shell/store` and becomes a remote of its own remotes
+  ([ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)). `widget_orders` reads it; the dashboard forwards
+  nothing.
+- api: `GET /orders/:orderId` so a deep link to an order works on a cold cache.
+
 **Problems**
 1. dashboard bundles its own React → invalid hook call inside widgets only.
 2. One widget throws → whole dashboard crashes.
 3. Widget URLs hardcoded → adding a widget requires a dashboard rebuild.
+4. The shell exposes a store and imports it relatively → two store instances, and the header's selector changes
+   nothing anywhere else.
+5. A widget's `./App` renders `<Routes>` without `react-router` in `shared` → a second router context, or the
+   invariant "useNavigate() may be used only in the context of a `<Router>` component".
+6. The shell mounts the dashboard without a splat → `/dashboard/orders` falls through to the shell's "not found".
+7. A circular container graph (shell → dashboard → widget_orders → shell) cannot be a dependency graph: a
+   `workspace:*` on `shell` for types makes the Turborepo `types` task cyclic.
 
 **Acceptance criteria**
 - ~~Adding a registry entry (no dashboard rebuild) shows a new widget.~~ **Not met** — iteration 09 is deferred, so
@@ -335,6 +355,10 @@ different origins/subdomains.
   fallback that no retry could recover from.
 - One failing widget does not affect others. ✅
 - Single React instance across shell → dashboard → widget (iter 1 debug helper). ✅
+- Extension: `/dashboard/orders` and `/dashboard/orders/o-1001` render after a refresh, in the shell and in
+  `widget_orders` standalone; back/forward keep URL and screen in sync.
+- Extension: changing the period in the shell's header updates the orders card and the orders application without a
+  reload, and `__mfDebug()` still shows one `react-router` and one `react`.
 
 **Interview angles:** nested federation and share scope; discovery/registry; widget contract design;
 who owns layout and settings.

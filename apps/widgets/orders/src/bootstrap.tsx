@@ -5,15 +5,48 @@ import {
   DEV_CREDENTIALS,
   SESSION_SERVICE,
 } from '@mf/api-client';
+import { ROUTES } from '@mf/contracts';
 import { createI18n, DEFAULT_LANGUAGE } from '@mf/i18n';
 import { createServiceContainer, ServicesProvider } from '@mf/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
+import { BrowserRouter, Link, Route, Routes } from 'react-router';
 // Standalone only: when hosted, the shell has already loaded the tokens and owns the theme.
 import '@mf/tokens/tokens.css';
+import App from './exposed/App';
 import Widget, { meta } from './exposed/Widget';
+import { useOrdersWidgetTranslation } from './i18n/use-orders-widget-translation';
+
+// Standalone mode: the card at "/", the application at the same URL the dashboard mounts it under, so a
+// deep link is the same string in both places. The card's "Open" link is the dashboard's chrome, so this
+// page renders its own.
+function StandaloneCard() {
+  const t = useOrdersWidgetTranslation();
+
+  return (
+    <>
+      <h1>{meta.title}</h1>
+      <Widget settings={{ limit: 5 }} size={meta.defaultSize} />
+      <p>
+        <Link to={ROUTES.dashboard.widget('orders')}>{t('standaloneOpenApp')}</Link>
+      </p>
+    </>
+  );
+}
+
+function StandaloneRoutes() {
+  const t = useOrdersWidgetTranslation();
+
+  return (
+    <Routes>
+      <Route path={ROUTES.home} element={<StandaloneCard />} />
+      <Route path={`${ROUTES.dashboard.widget('orders')}/*`} element={<App />} />
+      <Route path="*" element={<p>{t('standaloneForeignUrl')}</p>} />
+    </Routes>
+  );
+}
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root not found');
@@ -40,19 +73,20 @@ if (process.env.NODE_ENV !== 'production' && !session.isLoggedIn()) {
     .catch((error: unknown) => console.warn('Standalone dev login failed', error));
 }
 
-// No router: a widget renders no links and no routes, so it needs no <BrowserRouter> here and makes no
-// demand on whichever host embeds it. The dashboard's own chrome (title, size control) is not rendered
-// standalone either — this page is the widget alone, at its default size.
+// A router, since this widget became an application: `./App` renders <Routes> and needs a history above
+// it. The dashboard filter still comes from the shell's container on :3000 — this page is a host of the
+// shell exactly as it is under the dashboard, which is why :3000 has to be running for it to render.
 createRoot(container).render(
   <ServicesProvider container={services}>
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
-        <Suspense fallback={null}>
-          <main>
-            <h1>{meta.title}</h1>
-            <Widget settings={{ limit: 5 }} size={meta.defaultSize} />
-          </main>
-        </Suspense>
+        <BrowserRouter>
+          <Suspense fallback={null}>
+            <main>
+              <StandaloneRoutes />
+            </main>
+          </Suspense>
+        </BrowserRouter>
       </I18nextProvider>
     </QueryClientProvider>
   </ServicesProvider>,

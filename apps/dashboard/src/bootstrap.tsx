@@ -5,15 +5,32 @@ import {
   DEV_CREDENTIALS,
   SESSION_SERVICE,
 } from '@mf/api-client';
+import { ROUTES } from '@mf/contracts';
 import { createI18n, DEFAULT_LANGUAGE } from '@mf/i18n';
 import { createServiceContainer, ServicesProvider } from '@mf/services';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 // Standalone only: when hosted, the shell has already loaded the tokens and owns the theme.
 import '@mf/tokens/tokens.css';
 import App from './exposed/App';
+import { useDashboardTranslation } from './i18n/use-dashboard-translation';
+
+// Standalone mode: the dashboard owns the router only when the shell is not above it. It mounts itself at
+// the same prefix the shell uses, so /dashboard/orders/o-1001 is the same URL here and there.
+function StandaloneRoutes() {
+  const t = useDashboardTranslation();
+
+  return (
+    <Routes>
+      <Route path={ROUTES.home} element={<Navigate to={ROUTES.dashboard.root} replace />} />
+      <Route path={`${ROUTES.dashboard.root}/*`} element={<App />} />
+      <Route path="*" element={<p>{t('standaloneForeignUrl')}</p>} />
+    </Routes>
+  );
+}
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root not found');
@@ -40,17 +57,19 @@ if (process.env.NODE_ENV !== 'production' && !session.isLoggedIn()) {
     .catch((error: unknown) => console.warn('Standalone dev login failed', error));
 }
 
-// No router: the dashboard is one page, so it needs no <BrowserRouter> here either. Standalone it is
-// still a host — the widgets are loaded exactly as they are under the shell, one level shallower.
+// Standalone it is still a host — the widgets are loaded exactly as they are under the shell, one level
+// shallower — and now also a router: its own <Routes> need a history above them.
 createRoot(container).render(
   <ServicesProvider container={services}>
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
-        <Suspense fallback={null}>
-          <main>
-            <App />
-          </main>
-        </Suspense>
+        <BrowserRouter>
+          <Suspense fallback={null}>
+            <main>
+              <StandaloneRoutes />
+            </main>
+          </Suspense>
+        </BrowserRouter>
       </I18nextProvider>
     </QueryClientProvider>
   </ServicesProvider>,

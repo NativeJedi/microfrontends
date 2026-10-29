@@ -5,9 +5,15 @@
   "loadError": "Could not load the dashboard: {{message}}",
   "empty": "No widgets are registered.",
   "widgets": {
-    "sales": { "title": "Sales" },
-    "orders": { "title": "Recent orders" },
-    "reviews": { "title": "Reviews" }
+    "sales": {
+      "title": "Sales"
+    },
+    "orders": {
+      "title": "Recent orders"
+    },
+    "reviews": {
+      "title": "Reviews"
+    }
   },
   "size": {
     "label": "Size",
@@ -19,6 +25,13 @@
     "loading": "Loading widget…",
     "failed": "This widget failed: {{message}}",
     "retry": "Retry",
-    "unknown": "This dashboard build does not know this widget yet."
-  }
+    "unknown": "This dashboard build does not know this widget yet.",
+    "open": "Open"
+  },
+  "notFound": "This dashboard has no such page.",
+  "app": {
+    "back": "← Back to the dashboard",
+    "unknown": "The widget \"{{widgetId}}\" has no application in this dashboard build."
+  },
+  "standaloneForeignUrl": "This URL belongs to another micro-frontend. Open it in the shell."
 }
