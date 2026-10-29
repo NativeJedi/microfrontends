@@ -1,0 +1,10 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--mf-space-3, 16px);
+  align-items: start;
+}
+
+.subtitle {
+  color: var(--mf-color-muted, #71717a);
+}

@@ -6,3 +6,5 @@ export type {
   MfEventPayloads,
   ProductViewedPayload,
 } from './events';
+export { WIDGET_SIZES, clampWidgetSize } from './widgets';
+export type { WidgetMeta, WidgetProps, WidgetSettings, WidgetSize } from './widgets';

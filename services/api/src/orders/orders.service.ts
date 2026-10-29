@@ -16,22 +16,57 @@ export interface Order {
   createdAt: string;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const daysAgo = (days: number) => new Date(Date.now() - days * DAY_MS).toISOString();
+
+// Seeded relative to "now": the sales widget sums revenue over the last N days, so fixed dates would
+// make the dashboard look empty a few weeks after they were written.
+const SEED: Order[] = [
+  {
+    id: 'o-1001',
+    items: [{ productId: 'p3', name: 'Standing desk mat', price: 54, quantity: 1 }],
+    total: 54,
+    createdAt: daysAgo(1),
+  },
+  {
+    id: 'o-1002',
+    items: [{ productId: 'p1', name: 'Mechanical keyboard', price: 89, quantity: 1 }],
+    total: 89,
+    createdAt: daysAgo(3),
+  },
+  {
+    id: 'o-1003',
+    items: [
+      { productId: 'p2', name: 'USB-C hub', price: 39, quantity: 2 },
+      { productId: 'p3', name: 'Standing desk mat', price: 54, quantity: 1 },
+    ],
+    total: 132,
+    createdAt: daysAgo(6),
+  },
+  {
+    id: 'o-1004',
+    items: [{ productId: 'p1', name: 'Mechanical keyboard', price: 89, quantity: 2 }],
+    total: 178,
+    createdAt: daysAgo(12),
+  },
+  {
+    id: 'o-1005',
+    items: [{ productId: 'p2', name: 'USB-C hub', price: 39, quantity: 1 }],
+    total: 39,
+    createdAt: daysAgo(25),
+  },
+  {
+    id: 'o-1006',
+    items: [{ productId: 'p3', name: 'Standing desk mat', price: 54, quantity: 3 }],
+    total: 162,
+    createdAt: daysAgo(45),
+  },
+];
+
 @Injectable()
 export class OrdersService {
-  private readonly orders: Order[] = [
-    {
-      id: 'o-1001',
-      items: [{ productId: 'p3', name: 'Standing desk mat', price: 54, quantity: 1 }],
-      total: 54,
-      createdAt: '2026-10-01T10:00:00.000Z',
-    },
-    {
-      id: 'o-1002',
-      items: [{ productId: 'p1', name: 'Mechanical keyboard', price: 89, quantity: 1 }],
-      total: 89,
-      createdAt: '2026-10-08T15:30:00.000Z',
-    },
-  ];
+  private readonly orders: Order[] = [...SEED];
 
   constructor(private readonly productsService: ProductsService) {}
 

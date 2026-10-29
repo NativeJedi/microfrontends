@@ -1,0 +1,13 @@
+{
+  // Emits declarations of the exposed modules only: the public types hosts get through
+  // package.json "exports" (in a polyrepo this folder would be published as a types package).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "outDir": "types"
+  },
+  "include": ["src/exposed", "src/css.d.ts"]
+}

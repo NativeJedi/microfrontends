@@ -3,6 +3,7 @@
   "nav": {
     "catalog": "Каталог",
     "account": "Акаунт",
+    "dashboard": "Кабінет",
     "cart": "Кошик"
   },
   "recentlyViewed": "Нещодавно переглянуте: {{name}}",

@@ -10,6 +10,7 @@ export const ROUTES = {
     product: (productId: string) => `/catalog/${encodeURIComponent(productId)}`,
   },
   cart: '/cart',
+  dashboard: '/dashboard',
   account: {
     root: '/account',
     profile: '/account/profile',

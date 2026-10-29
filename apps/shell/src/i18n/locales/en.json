@@ -3,6 +3,7 @@
   "nav": {
     "catalog": "Catalog",
     "account": "Account",
+    "dashboard": "Dashboard",
     "cart": "Cart"
   },
   "recentlyViewed": "Recently viewed: {{name}}",

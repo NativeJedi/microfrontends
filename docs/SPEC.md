@@ -41,7 +41,8 @@ Container names must be valid JS identifiers (hence `widget_sales`, not `widget-
 | `/login?returnTo=<path>` | shell (iter 8) |
 
 Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardcoded URLs in links or redirects.
-`/login` was added in iteration 08 (`ROUTES.login(returnTo?)`), `/dashboard` comes in iteration 10.
+`/login` was added in iteration 08 (`ROUTES.login(returnTo?)`), `/dashboard` in iteration 10 (`ROUTES.dashboard`,
+a single route with no splat: the dashboard is one page and renders no router of its own).
 
 ## 3. Architecture
 
@@ -68,7 +69,11 @@ Ownership rules:
 - **Remotes** own: their routes below their prefix, their UI, their translations (one i18n namespace each),
   their query hooks (using shared query options from `@mf/queries`), and the client state of their domain
   (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
-- **dashboard** owns widget layout and widget loading; widget URLs come from the API registry.
+- **dashboard** owns widget layout (order, size, settings) and widget loading. The API registry (`GET /widgets`)
+  owns which widgets exist; in iteration 10 the widget URLs are still static `remotes` in the dashboard's webpack
+  config ([ADR 0015](decisions/0015-static-widget-remotes.md)) and move to the registry with iteration 09's
+  `loadRemote`. A **widget** owns everything inside its card: its UI, its i18n namespace and the meaning of its
+  settings ([ADR 0014](decisions/0014-widget-contract.md)).
 
 ## 4. Tech stack
 
@@ -92,6 +97,7 @@ pnpm catalogs (from iter 1).
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
 | Auth | JWT (JSON Web Token) access token + rotating refresh token, both in httpOnly `SameSite=Strict` cookies (`@nestjs/jwt`, `cookie-parser`) | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
 | Services to remotes | `@mf/services`: generic service container + React provider, MF shared singleton | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
+| Widget contract | `@mf/contracts`: `./Widget` = default component (`settings`, `size`) + named `meta` | iter 10, [ADR 0014](decisions/0014-widget-contract.md) |
 | Containers | Docker Compose + nginx | iter 13 |
 | CI | GitHub Actions | iter 13 |
 | Observability | Sentry (⚠ open decision in iter 15) | iter 15 |
@@ -245,6 +251,23 @@ apps/catalog/
 - Route guards (`RequireAuth`) are UX only; the API protects data (global guard, `@AuthMode`). `returnTo` accepts
   only same-app absolute paths.
 
+### Dashboard widgets (iter 10, [notes](notes/10-nested.md), [ADR 0014](decisions/0014-widget-contract.md), [ADR 0015](decisions/0015-static-widget-remotes.md))
+- The dashboard is a **remote and a host at once**: one `ModuleFederationPlugin` with both `exposes` and `remotes`.
+  An intermediate host must declare the same singletons as the shell — it does not create a scope for its children,
+  it passes on the one it was initialized with, and its own imports must be consumptions from it.
+- A widget exposes `./Widget`: a default-exported component taking `WidgetProps` (`settings`, `size`) plus a named
+  export `meta: WidgetMeta` (`id`, `title`, `defaultSize`, `minSize`). The host resolves the module itself (`use()`
+  on a promise cached per widget id) because `React.lazy` cannot reach `meta`; a retry drops that cached promise.
+- Widgets render no routes and no links, so they declare no `react-router` and work in any host. Their i18n
+  namespace is their container name (`widget_sales`, …).
+- **Size is a negotiation:** the layout proposes, the widget's `minSize` vetoes (`clampWidgetSize`). The card heading
+  is the host's text, translated by the dashboard and keyed by widget id, with `meta.title` as the fallback for a
+  widget it has no translation for.
+- `settings` crosses as `Readonly<Record<string, unknown>>` and is narrowed by the widget that owns the keys. The API
+  stores layouts without understanding them (validation stops at "a JSON object").
+- **One error boundary and one `<Suspense>` per card**, so the blast radius of a crash matches the deployment unit
+  and one slow `remoteEntry.js` does not hold the others back.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -292,7 +315,9 @@ Rules:
 ## 9. Environments and config
 
 - Dev: every app on its own port (section 2). Remote URLs: static in shell config until iter 9,
-  then runtime `remotes.json` / API registry.
+  then runtime `remotes.json` / API registry. Iteration 09 is deferred, so the dashboard's widget URLs are
+  static too, although the API registry (`GET /widgets`) that will replace them already exists
+  ([ADR 0015](decisions/0015-static-widget-remotes.md)).
 - From iter 13: one build artifact per app, environment config injected at runtime
   (never baked in with build-time env vars).
 - API base URL `http://localhost:4000` in dev. CORS allows the dev ports with credentials.

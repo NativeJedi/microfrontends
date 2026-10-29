@@ -1,0 +1,24 @@
+{
+  "title": "Seller dashboard",
+  "subtitle": "Widgets come from the registry; this dashboard owns their order, size and settings.",
+  "loading": "Loading dashboard…",
+  "loadError": "Could not load the dashboard: {{message}}",
+  "empty": "No widgets are registered.",
+  "widgets": {
+    "sales": { "title": "Sales" },
+    "orders": { "title": "Recent orders" },
+    "reviews": { "title": "Reviews" }
+  },
+  "size": {
+    "label": "Size",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
+  },
+  "widget": {
+    "loading": "Loading widget…",
+    "failed": "This widget failed: {{message}}",
+    "retry": "Retry",
+    "unknown": "This dashboard build does not know this widget yet."
+  }
+}

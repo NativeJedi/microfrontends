@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-2, 8px);
+  padding: var(--mf-space-3, 16px);
+  border: 1px solid var(--mf-color-border, #d4d4d8);
+  border-radius: var(--mf-radius, 6px);
+  background: var(--mf-color-surface, #f4f4f5);
+}
+
+/* The grid is six columns wide; the size the layout stores decides how many a card takes. */
+.card[data-size='small'] {
+  grid-column: span 2;
+}
+
+.card[data-size='medium'] {
+  grid-column: span 3;
+}
+
+.card[data-size='large'] {
+  grid-column: span 6;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mf-space-2, 8px);
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sizeLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--mf-space-1, 4px);
+  font-size: 0.85rem;
+}
+
+.failure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--mf-space-2, 8px);
+}
+
+.failureMessage {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--mf-color-muted, #71717a);
+}

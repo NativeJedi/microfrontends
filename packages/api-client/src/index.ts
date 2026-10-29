@@ -11,3 +11,7 @@ export { getProduct, getProducts } from './products';
 export type { Product } from './products';
 export { createOrder, getOrders } from './orders';
 export type { CreateOrderRequest, Order, OrderItem } from './orders';
+export { getReviews } from './reviews';
+export type { Review } from './reviews';
+export { getDashboardLayout, getWidgetRegistry, saveDashboardLayout } from './widgets';
+export type { DashboardLayout, DashboardLayoutEntry, WidgetRegistryEntry } from './widgets';

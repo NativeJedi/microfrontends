@@ -1,0 +1,12 @@
+{
+  "title": "Recent orders",
+  "subtitle_one": "Newest order",
+  "subtitle_other": "{{count}} newest orders",
+  "placedAt": "{{value, datetime}}",
+  "total": "{{value, currency(USD)}}",
+  "itemCount_one": "{{count}} item",
+  "itemCount_other": "{{count}} items",
+  "loading": "Loading orders…",
+  "loadError": "Could not load orders: {{message}}",
+  "empty": "No orders yet."
+}

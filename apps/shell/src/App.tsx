@@ -14,6 +14,7 @@ import { useRecentlyViewedProduct } from './use-recently-viewed-product';
 const CatalogApp = lazy(() => import('catalog/App'));
 const CartApp = lazy(() => import('cart/App'));
 const AccountApp = lazy(() => import('account/App'));
+const DashboardApp = lazy(() => import('dashboard/App'));
 const CartWidget = lazy(() => import('cart/CartWidget'));
 
 function RecentlyViewedLink() {
@@ -36,6 +37,7 @@ function Header() {
       <h1 className={styles.title}>{t('title')}</h1>
       <NavLink to={ROUTES.catalog.root}>{t('nav.catalog')}</NavLink>
       <NavLink to={ROUTES.account.root}>{t('nav.account')}</NavLink>
+      <NavLink to={ROUTES.dashboard}>{t('nav.dashboard')}</NavLink>
       <RecentlyViewedLink />
       <Suspense fallback={<span>{t('cartLoading')}</span>}>
         {/* The label is the shell's text, so the shell translates it; the prop contract is unchanged. */}
@@ -73,6 +75,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <AccountApp />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path={ROUTES.dashboard}
+              element={
+                <RequireAuth>
+                  <DashboardApp />
                 </RequireAuth>
               }
             />

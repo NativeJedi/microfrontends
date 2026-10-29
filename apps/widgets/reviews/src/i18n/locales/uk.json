@@ -1,0 +1,10 @@
+{
+  "title": "Відгуки",
+  "subtitle": "Оцінка {{minRating}} і вище",
+  "average": "Середня {{value, number(maximumFractionDigits: 1)}}",
+  "rating": "{{rating}} з 5",
+  "by": "від {{author}}",
+  "loading": "Завантажуємо відгуки…",
+  "loadError": "Не вдалося завантажити відгуки: {{message}}",
+  "empty": "Немає відгуків за цим фільтром."
+}

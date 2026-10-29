@@ -22,7 +22,7 @@ Status values: `todo` · `in progress` · `done` · `blocked`
 | 07 | i18n | #8 | done |
 | 08 | Auth and session | #12 | done |
 | 09 | Resilience + manual dynamic remote loading | #10 | todo |
-| 10 | Nested micro-frontends: dashboard + widgets | new | todo |
+| 10 | Nested micro-frontends: dashboard + widgets | new | done |
 | 11 | Performance | #9 | todo |
 | 12 | Contract testing | new | todo |
 | 13 | Independent deployment | #13 | todo |
@@ -328,9 +328,13 @@ different origins/subdomains.
 3. Widget URLs hardcoded → adding a widget requires a dashboard rebuild.
 
 **Acceptance criteria**
-- Adding a registry entry (no dashboard rebuild) shows a new widget.
-- One failing widget does not affect others.
-- Single React instance across shell → dashboard → widget (iter 1 debug helper).
+- ~~Adding a registry entry (no dashboard rebuild) shows a new widget.~~ **Not met** — iteration 09 is deferred, so
+  the widgets are static `remotes` and an unknown registry id renders an "unknown widget" card
+  ([ADR 0015](decisions/0015-static-widget-remotes.md)). The per-widget timeout of the scope is not met either, and
+  was deliberately not faked: with a static remote webpack caches the failed script load, so a timeout would show a
+  fallback that no retry could recover from.
+- One failing widget does not affect others. ✅
+- Single React instance across shell → dashboard → widget (iter 1 debug helper). ✅
 
 **Interview angles:** nested federation and share scope; discovery/registry; widget contract design;
 who owns layout and settings.
