@@ -1,5 +1,7 @@
+import { API_CLIENT_SERVICE } from '@mf/api-client';
 import { ROUTES } from '@mf/contracts';
 import { productQueries } from '@mf/queries';
+import { useService } from '@mf/services';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import AddToCartButton from '../add-to-cart/AddToCartButton';
@@ -7,7 +9,8 @@ import { useCatalogTranslation } from '../i18n/use-catalog-translation';
 
 export default function ProductListPage() {
   const t = useCatalogTranslation();
-  const { data: products, isPending, error } = useQuery(productQueries.list());
+  const api = useService(API_CLIENT_SERVICE);
+  const { data: products, isPending, error } = useQuery(productQueries.list(api));
 
   return (
     <section>

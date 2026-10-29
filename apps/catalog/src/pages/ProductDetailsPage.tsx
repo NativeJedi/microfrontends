@@ -1,5 +1,7 @@
+import { API_CLIENT_SERVICE } from '@mf/api-client';
 import { dispatchMfEvent, MF_EVENTS, ROUTES } from '@mf/contracts';
 import { productQueries } from '@mf/queries';
+import { useService } from '@mf/services';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
@@ -9,8 +11,9 @@ import styles from './ProductDetailsPage.module.css';
 
 export default function ProductDetailsPage() {
   const t = useCatalogTranslation();
+  const api = useService(API_CLIENT_SERVICE);
   const { productId = '' } = useParams();
-  const { data: product, isPending, error } = useQuery(productQueries.detail(productId));
+  const { data: product, isPending, error } = useQuery(productQueries.detail(api, productId));
 
   useEffect(() => {
     if (product)

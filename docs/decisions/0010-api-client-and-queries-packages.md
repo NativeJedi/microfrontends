@@ -1,6 +1,6 @@
 # 0010 — Stateless `@mf/api-client` and `@mf/queries` packages; stateful instances come from the shell
 
-- Status: accepted
+- Status: accepted (delivery of the HTTP client through props: superseded by [0013](0013-auth-session.md))
 - Date: 2026-10-17
 - Iteration: 05
 

@@ -2,12 +2,15 @@
   "name": "@mf/api-client",
   "private": true,
   "version": "0.0.0",
-  "description": "Stateless HTTP functions and response types of services/api. No React, no cache.",
+  "description": "HTTP layer of services/api: request functions, response types, and factories for the session and the API client (single-flight refresh). No React, no cache.",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
+  },
+  "dependencies": {
+    "@mf/services": "workspace:*"
   }
 }

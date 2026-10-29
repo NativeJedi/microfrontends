@@ -17,5 +17,15 @@
     "label": "Language",
     "en": "English",
     "uk": "Українська"
+  },
+  "auth": {
+    "title": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "logIn": "Log in",
+    "loggingIn": "Logging in…",
+    "logOut": "Log out",
+    "wrongCredentials": "Wrong email or password.",
+    "loginFailed": "Could not log in. Try again."
   }
 }

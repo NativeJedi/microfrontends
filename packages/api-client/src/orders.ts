@@ -1,4 +1,4 @@
-import { requestJson } from './http';
+import type { ApiClient } from './http';
 
 export interface OrderItem {
   productId: string;
@@ -18,12 +18,12 @@ export interface CreateOrderRequest {
   items: { productId: string; quantity: number }[];
 }
 
-export function getOrders(): Promise<Order[]> {
-  return requestJson<Order[]>('/orders');
+export function getOrders(api: ApiClient): Promise<Order[]> {
+  return api.request<Order[]>('/orders');
 }
 
-export function createOrder(request: CreateOrderRequest): Promise<Order> {
-  return requestJson<Order>('/orders', {
+export function createOrder(api: ApiClient, request: CreateOrderRequest): Promise<Order> {
+  return api.request<Order>('/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
