@@ -10,7 +10,13 @@ export const ROUTES = {
     product: (productId: string) => `/catalog/${encodeURIComponent(productId)}`,
   },
   cart: '/cart',
-  dashboard: '/dashboard',
+  // The dashboard is a remote that is itself a host: it owns everything below /dashboard and mounts a
+  // widget's full application under the widget's own id.
+  dashboard: {
+    root: '/dashboard',
+    widget: (widgetId: string) => `/dashboard/${encodeURIComponent(widgetId)}`,
+    order: (orderId: string) => `/dashboard/orders/${encodeURIComponent(orderId)}`,
+  },
   account: {
     root: '/account',
     profile: '/account/profile',

@@ -1,34 +1,27 @@
-import { useDashboardLayout } from '../layout/use-dashboard-layout';
+import { Route, Routes } from 'react-router';
+import DashboardGrid from '../grid/DashboardGrid';
 import { useDashboardTranslation } from '../i18n/use-dashboard-translation';
-import WidgetCard from '../widgets/WidgetCard';
-import styles from './App.module.css';
+import WidgetAppRoute from '../widgets/WidgetAppRoute';
+
+function UnknownRoute() {
+  const t = useDashboardTranslation();
+  return <p>{t('notFound')}</p>;
+}
 
 /**
- * A remote of the shell and a host of three widgets at the same time. It renders no router: the shell
- * mounts it on the single route /dashboard, and the dashboard's own job starts below that URL.
+ * A remote of the shell and a host of the widgets — and now a router level of its own. The shell mounts
+ * this app at `/dashboard/*` and matches nothing below it; these <Routes> are *descendant* routes, so they
+ * see only the part of the URL after the mount point and never learn where they are mounted.
+ *
+ * A widget that is a whole application (one that also exposes `./App`) is mounted under its own id, with
+ * a splat of its own: the widget then routes a third time, inside `/dashboard/orders/*`.
  */
 export default function App() {
-  const t = useDashboardTranslation();
-  const { widgets, isPending, error, setSize } = useDashboardLayout();
-
   return (
-    <section>
-      <h2>{t('title')}</h2>
-      <p className={styles.subtitle}>{t('subtitle')}</p>
-      {isPending && <p>{t('loading')}</p>}
-      {error && <p>{t('loadError', { message: error.message })}</p>}
-      {widgets?.length === 0 && <p>{t('empty')}</p>}
-      <div className={styles.grid}>
-        {widgets?.map((widget) => (
-          <WidgetCard
-            key={widget.id}
-            widgetId={widget.id}
-            savedSize={widget.size}
-            settings={widget.settings}
-            onResize={setSize}
-          />
-        ))}
-      </div>
-    </section>
+    <Routes>
+      <Route index element={<DashboardGrid />} />
+      <Route path=":widgetId/*" element={<WidgetAppRoute />} />
+      <Route path="*" element={<UnknownRoute />} />
+    </Routes>
   );
 }

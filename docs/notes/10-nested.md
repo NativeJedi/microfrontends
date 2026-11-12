@@ -42,6 +42,28 @@ Widgets are loaded as **static remotes** — iteration 09's `loadRemote` was def
 
 Each card is its own unit: its own `<Suspense>`, its own error boundary, its own retry.
 
+**Extension (same iteration, added at the user's request): a widget that is a whole application.**
+`widget_orders` now exposes `./App` next to `./Widget` — the same deployment, a second entry point — and the shell
+publishes the dashboard's global filter as `shell/store`:
+
+```js
+// apps/widgets/orders/webpack.config.js
+exposes: { './Widget': './src/exposed/Widget.tsx', './App': './src/exposed/App.tsx' },
+remotes: { shell: 'shell@http://localhost:3000/remoteEntry.js' },   // the leaf is a host of the root
+```
+
+```js
+// apps/shell/webpack.config.js — the host is a remote now
+filename: 'remoteEntry.js',
+exposes: { './store': './src/exposed/store.ts' },
+remotes: { shell: 'shell@http://localhost:3000/remoteEntry.js', catalog: …, dashboard: … },
+```
+
+That gives three routing levels (`/dashboard/*` → `:widgetId/*` → `index` | `:orderId`), a period filter that
+travels from the shell's header into a widget two levels below, and a container graph with a cycle in it
+([ADR 0016](../decisions/0016-shell-exposes-dashboard-state.md),
+[ADR 0017](../decisions/0017-widget-as-application.md)).
+
 ## How it works
 
 ### One share scope across three levels
@@ -122,6 +144,60 @@ dashboard with both of them the network panel shows **one** `GET /orders`. That 
 `@tanstack/react-query` is a singleton at all three levels: a second copy would mean a second `QueryClientProvider`
 context and two caches.
 
+### Three levels of descendant routes
+Each `<Routes>` matches only what the level above left over, and none of them knows where it is mounted:
+
+| Level | Route it declares | URL it matches | File |
+|---|---|---|---|
+| shell | `/dashboard/*` | `/dashboard/orders/o-1001` | `apps/shell/src/App.tsx` |
+| dashboard | `:widgetId/*` | `orders/o-1001` | `apps/dashboard/src/exposed/App.tsx` |
+| widget | `:orderId` | `o-1001` | `apps/widgets/orders/src/exposed/App.tsx` |
+
+The dashboard mounts widget applications generically — `:widgetId/*`, not `orders/*` — and asks
+`widget-modules.ts` whether that id has an `./App` binding. The same map decides whether the card shows an "Open"
+link. Navigation stays the **host's** business: the dashboard knows it mounted the widget at
+`/dashboard/orders`, the widget does not.
+
+The card and the application are two exposes of one deployment, and the difference between them is not cosmetic:
+a card is a component, an application is a router level. `./Widget` works in any host; `./App` demands that its
+host own a `<BrowserRouter>` and share `react-router` as a singleton.
+
+### State that comes from above
+The period filter lives in a Zustand store in the shell, next to the `<select>` that changes it, and the shell
+publishes it the way cart publishes the cart (ADR 0009) — as functions, not as the raw store:
+
+```ts
+// apps/shell/src/exposed/store.ts
+export const useDashboardPeriod: DashboardPeriodStore['useDashboardPeriod'] = () =>
+  useDashboardPeriodStore((state) => state.period);
+```
+
+```ts
+// apps/widgets/orders/src/orders/use-orders-in-period.ts
+import { useDashboardPeriod } from 'shell/store';
+```
+
+Nothing in the dashboard mentions the period. It is not a prop, it does not appear in `WidgetProps`, and the
+dashboard does not redeploy when the shell adds another field to the store. Two kinds of state now reach one
+widget from two directions:
+
+| State | Owner | How it travels | Why |
+|---|---|---|---|
+| `size`, `settings` | dashboard (the layout) | props, per card | They are a property of *this placement* of the widget |
+| period filter | shell | `shell/store`, read directly | It is a property of the *page*, identical for every widget |
+
+### A host that is also a remote
+A build with `exposes` has two entry points — `main.js` and `remoteEntry.js` — and **each carries its own webpack
+runtime**. In the development build both files contain their own `var __webpack_modules__` and
+`__webpack_module_cache__ = {}`. A module reached through both is therefore evaluated twice, which for a store
+means two independent stores (see "What can go wrong", item 5).
+
+So the shell consumes its own expose through its own container, listing itself in `remotes` and importing
+`shell/store` like any other remote module. `tsconfig.json` maps that specifier to the source with `paths` (a
+package cannot be its own workspace dependency); webpack ignores the mapping and resolves it through federation.
+The build output shows the result: `main.js` holds the external `shell@http://localhost:3000/remoteEntry.js`, and
+the store itself lives in one chunk, `src_exposed_store_ts.js`, behind the container.
+
 ## What can go wrong
 
 ### 1. The dashboard bundles its own React → "Invalid hook call", but only inside the widgets
@@ -182,6 +258,69 @@ context and two caches.
   piece of code. Not faking it is deliberate: see the working rules in CLAUDE.md about never weakening a criterion
   silently.
 
+### 5. The shell exposes a store and imports it relatively → two stores, and no error anywhere
+- **Symptom:** the period `<select>` in the header switches, the label updates, and nothing else on the page
+  reacts. No console error, no warning, `window.__mfDebug()` perfectly clean — one `react`, one `react-dom`, one
+  of everything. Reloading the page shows the *persisted* value in both places, which makes it look like a
+  re-render problem rather than an identity problem.
+- **Root cause:** `exposes` adds a second entry point to the build. `main.js` and `remoteEntry.js` each define
+  their own `__webpack_modules__` and `__webpack_module_cache__`, so `src/dashboard-period/store.ts` reached
+  relatively from the header and through `shell/store` from the widget is **two module instances** —
+  `create()` runs twice, and each copy has its own subscribers. The share scope does not help: a shared module is
+  negotiated between *containers*, and this is one build talking to itself.
+- **Fix:** the shell reads its own state through its own container (the chosen fix) — `shell` in its own `remotes`
+  and `import … from 'shell/store'` in the header. Two alternatives with the same effect: register the store
+  instance in the `@mf/services` container, which the shell already provides to everyone (option 2 of ADR 0016), or
+  declare the store module itself as a shared module so both runtimes consume it from the share scope.
+  A giveaway while debugging: add a module-level `console.log` to the store file and count the lines.
+
+### 6. The dashboard is mounted without a splat → "Page not found" one click later
+- **Symptom:** `/dashboard` renders the grid, clicking "Open" changes the URL to `/dashboard/orders` and the shell
+  renders its own `t('notFound')` page. The dashboard is not even mounted any more, so its own `<Routes>` never get
+  the chance to say anything.
+- **Root cause:** `<Route path="/dashboard">` matches that one pathname and nothing below it. A parent that hosts
+  descendant `<Routes>` must end in `/*`, as `ROUTES.catalog.root` has since iteration 03. The nesting of routers
+  has to mirror the nesting of federation: every level that hosts another level needs its own splat.
+- **Fix:** `path={`${ROUTES.dashboard.root}/*`}` in the shell and `path=":widgetId/*"` in the dashboard. The same
+  trap in reverse: the widget's `<Route path=":orderId">` needs **no** splat, because nothing routes below it.
+
+### 7. The widget's `./App` renders `<Routes>` without sharing `react-router`
+- **Symptom:** the orders card still works, and the moment `/dashboard/orders` mounts the application, the router
+  invariant from iteration 03 appears — `useNavigate() may be used only in the context of a <Router> component.`
+  (or, for a `<Link>`, the `TypeError` on the destructured `basename`). If the widget instead brings its own
+  `<BrowserRouter>`, nothing throws and the bug is worse: two histories on one page, a back button that undoes the
+  wrong navigation, and links that update the URL without re-rendering the shell.
+- **Root cause:** the router's location lives in a React context created at module level. A second copy of
+  `react-router` is a second context, which the shell's `<BrowserRouter>` never fills.
+- **Fix:** `react-router` as a singleton in `shared` of every level that renders routes — the shell had it, the
+  dashboard and `widget_orders` got it in this extension. The card, which renders no routes, is unaffected either
+  way; this is why the leaf stayed router-free until it became an application.
+
+### 8. The container graph has a cycle, so the type graph cannot copy it
+- **Symptom:** adding `"shell": "workspace:*"` to `widget_orders` (to get the types of `shell/store` the way every
+  other host gets a remote's types, ADR 0008) makes Turborepo refuse to run: the `types` task of `shell` waits for
+  `widget_orders`, which waits for `dashboard`, which waits for `shell`.
+- **Root cause:** `shell → dashboard → widget_orders → shell` is fine at runtime — containers only hold URLs, and
+  the loop is resolved by whoever loads first — but `typecheck` depends on `^types`, and a build graph cannot have
+  a cycle.
+- **Fix:** the *interface* of the expose moved into `@mf/contracts`, a leaf both sides already depend on
+  (`DashboardPeriodStore`). The shell annotates its exports with it; `widget_orders` has a six-line
+  `src/shell-store.d.ts` declaring `shell/store` from the same interface. Hand-written, but checked on both ends:
+  a change to the contract breaks whichever side is wrong. The alternative — a dedicated `@mf/shell-contract`
+  package — buys nothing here, since `@mf/contracts` is already that package.
+
+### 9. The leaf now depends on the root
+- **Symptom:** the standalone widget page on :3012 fetches `http://localhost:3000/remoteEntry.js`, the store chunk
+  and `zustand` from the **shell's** origin (visible in the network panel of :3012). With :3000 down, that load is
+  the one that fails, and a page that is supposed to be independent of the shell cannot render.
+- **Root cause:** reading `shell/store` makes the widget a host of the shell. Independence is a property of the
+  *graph*, not of the port a thing runs on, and this iteration deliberately added an edge back to the root.
+- **Fix:** none applied — it is the accepted cost of ADR 0016, written down in the ADR's consequences. If a widget
+  had to survive without the shell, the state would travel as a prop from the dashboard (option 3) or through the
+  service container with a default (option 2), both of which keep the graph acyclic. The same reasoning applies to
+  `output.publicPath`: the shell had to move from `'/'` to `'auto'`, because its chunks are now fetched by pages on
+  other origins.
+
 ## Trade-offs and alternatives
 
 | Option | Pros | Cons |
@@ -195,6 +334,12 @@ context and two caches.
 | `React.lazy` per widget | Idiomatic, retry via `key` | Cannot reach `meta`; needs a second import or a second expose |
 | **`settings` as `unknown`, narrowed by the widget** (chosen) | A new widget ships without touching shared packages | No compile-time check across the boundary |
 | A settings union in `@mf/contracts` | Type-safe end to end | Every new widget changes a package every app depends on |
+| **Widget state from `shell/store`** (chosen) | The dashboard forwards nothing; adding shell state is additive | The container graph gains a cycle; the widget needs :3000 even standalone |
+| The store instance in the `@mf/services` container | No new container edge; standalone keeps working | A service key is a weaker contract than an expose |
+| The period as a prop through the dashboard | Explicit, type-checked end to end | `WidgetProps` grows per field; the dashboard redeploys for state it does not use |
+| **A second expose `./App`** (chosen) | One deployment, one team, two entry points | The widget now demands a router from its host |
+| A `mode` prop on `./Widget` | No new expose | A switch statement across a deployment boundary; routing code in every card |
+| A separate `orders_app` remote | The card stays router-free | Two deployments and two namespaces for one domain |
 
 ## Interview questions
 
@@ -230,6 +375,27 @@ context and two caches.
   **A:** Because `remotes` is build-time input. Webpack resolves `import('widget_x/Widget')` against the containers
   it was told about at compile time, so a registry entry alone cannot produce one. Fixing it means loading the
   container at runtime: inject the script, `__webpack_init_sharing__`, `container.init`, `container.get`.
+
+- **Q:** The shell owns a piece of state that a widget two levels down needs. How does it get there?
+  **A:** Not by forwarding. The shell exposes it (`shell/store`) and the widget imports it, which makes the shell a
+  remote of its own remotes. The dashboard in the middle never mentions it, so the shell can add state without
+  redeploying the level between. The price is a cycle in the container graph and a widget that needs the shell's
+  origin even when it runs alone — the alternatives are a service-container key or a prop through the dashboard.
+
+- **Q:** You exposed a store from the host and the host's own UI stopped seeing changes. Why?
+  **A:** A build with `exposes` has two entry points, `main.js` and `remoteEntry.js`, and each has its own webpack
+  runtime and module cache. Importing the store relatively in the host's own code evaluates it a second time, so
+  there are two stores and no error anywhere. The host has to consume its own expose through its own container.
+
+- **Q:** How deep can routing nest in a federation, and who owns the splat?
+  **A:** As deep as the federation itself. Every level that hosts another level declares `/*` and renders
+  descendant `<Routes>`; every level matches only the remainder of the URL and never learns its mount point. The
+  router is still single — `react-router` is a singleton — so there is one history for all of them.
+
+- **Q:** Why did the widget need `react-router` now, when iteration 10 deliberately left it out?
+  **A:** Because it stopped being a card. A component can be mounted anywhere; a router level cannot — it requires
+  a `<Router>` above it and the same `react-router` instance as the host. That is exactly why the two faces are two
+  exposes: `./Widget` keeps the weak requirement, `./App` carries the strong one.
 
 ## Links
 - Module Federation (webpack 5): https://webpack.js.org/concepts/module-federation/

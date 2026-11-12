@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { parseCreateOrderRequest } from './create-order-request';
 import { OrdersService, type Order } from './orders.service';
 
@@ -9,6 +9,12 @@ export class OrdersController {
   @Get()
   findAll(): Order[] {
     return this.ordersService.findAll();
+  }
+
+  // Declared after the collection route: ':orderId' would also match an empty path segment otherwise.
+  @Get(':orderId')
+  findOne(@Param('orderId') orderId: string): Order {
+    return this.ordersService.findById(orderId);
   }
 
   @Post()

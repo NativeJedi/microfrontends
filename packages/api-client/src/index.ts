@@ -9,7 +9,7 @@ export { DEV_CREDENTIALS } from './dev-credentials';
 export { API_CLIENT_SERVICE, SESSION_SERVICE } from './service-keys';
 export { getProduct, getProducts } from './products';
 export type { Product } from './products';
-export { createOrder, getOrders } from './orders';
+export { createOrder, getOrder, getOrders } from './orders';
 export type { CreateOrderRequest, Order, OrderItem } from './orders';
 export { getReviews } from './reviews';
 export type { Review } from './reviews';

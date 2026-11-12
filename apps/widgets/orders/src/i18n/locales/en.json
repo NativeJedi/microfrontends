@@ -8,5 +8,19 @@
   "itemCount_other": "{{count}} items",
   "loading": "Loading orders…",
   "loadError": "Could not load orders: {{message}}",
-  "empty": "No orders yet."
+  "empty": "No orders yet.",
+  "inPeriod_one": "last {{count}} day",
+  "inPeriod_other": "last {{count}} days",
+  "emptyInPeriod_one": "No orders in the last day.",
+  "emptyInPeriod_other": "No orders in the last {{count}} days.",
+  "orderCount_one": "{{count}} order",
+  "orderCount_other": "{{count}} orders",
+  "backToList": "← All orders",
+  "orderTitle": "Order {{id}}",
+  "item": "Item",
+  "quantity": "Qty",
+  "price": "Price",
+  "orderTotal": "Total: {{value, currency(USD)}}",
+  "standaloneForeignUrl": "This URL belongs to another micro-frontend. Open it in the shell.",
+  "standaloneOpenApp": "Open the full application →"
 }

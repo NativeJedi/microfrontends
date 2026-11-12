@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductsService } from '../products/products.service';
 import type { CreateOrderRequest } from './create-order-request';
 
@@ -72,6 +72,13 @@ export class OrdersService {
 
   findAll(): Order[] {
     return this.orders;
+  }
+
+  // A deep link to /dashboard/orders/:id must work without the list having been fetched first.
+  findById(orderId: string): Order {
+    const order = this.orders.find((candidate) => candidate.id === orderId);
+    if (!order) throw new NotFoundException(`Order "${orderId}" not found`);
+    return order;
   }
 
   // Names and prices come from the server's catalog, never from the client.

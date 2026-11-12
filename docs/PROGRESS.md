@@ -20,6 +20,56 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 
 ## Entries
 
+### 2026-10-29 — Iteration 10 (extension) — A widget that is an application: nested routing + state from the shell
+- Status: done
+- Done:
+  - `widget_orders` exposes `./App` next to `./Widget`: one deployment, two entry points. The application renders
+    descendant `<Routes>` (`index` = every order of the period, `:orderId` = details) and `react-router` became a
+    shared singleton in `dashboard` and `widget_orders` ([ADR 0017](decisions/0017-widget-as-application.md)).
+  - Three routing levels: shell `/dashboard/*` → dashboard `:widgetId/*` → widget `index` / `:orderId`.
+    `ROUTES.dashboard` is now an object (`root`, `widget(id)`, `order(id)`). The dashboard mounts widget apps
+    generically and renders the card's "Open" link itself — navigation is the host's business.
+  - The shell became a **remote of its own remotes**: `exposes: { './store' }` publishes the dashboard's period
+    filter (7/30/90 days, Zustand + persist as `dashboard:period`), and `widget_orders` reads it directly. The
+    dashboard forwards nothing ([ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)).
+  - The shell reads its own store through its own container (`shell` in its own `remotes`, `paths` in tsconfig),
+    because `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches. Its `publicPath`
+    moved `'/'` → `'auto'`, and `HtmlWebpackPlugin` got `excludeChunks: ['shell']` so the container file is not
+    executed a second time under a different URL.
+  - The expose's type (`DashboardPeriodStore`) lives in `@mf/contracts`, not in generated declarations: the
+    container graph is circular (shell → dashboard → widget_orders → shell) and a `workspace:*` on `shell` would
+    make the Turborepo `types` graph cyclic. `widget_orders/src/shell-store.d.ts` declares it from that interface.
+  - api: `GET /orders/:orderId`; `@mf/api-client` `getOrder`; `@mf/queries` `orderQueries.detail`.
+- Verified in the browser (shell :3000, dashboard :3004, widget :3012):
+  - `/dashboard` → "Open" → `/dashboard/orders` → `/dashboard/orders/o-1003`; a refresh on the deep link renders
+    the order (`GET /orders/o-1003`, with the iteration-08 401 → refresh → retry), back/back/forward keep URL and
+    screen in sync across all three levels.
+  - Changing the period in the shell's header to 7 days: the application's list went 5 → 3 rows and the card's
+    subtitle to "last 7 days" instantly, with no reload and no new request — one store instance, one cached
+    `GET /orders`. `dashboard:period` persisted as `{"state":{"period":7},"version":1}`.
+  - `window.__mfDebug()`: 7 rows, one per shared package, no duplicates. `react-router 8.4.0` is provided by
+    `widget_orders` — the same `uniqueName` tiebreak among equal versions as `widget_sales` for the rest.
+  - The shell page fetches `:3000/remoteEntry.js` exactly once (one container, one module cache).
+  - `/dashboard/sales` (a widget with no `./App`) renders the dashboard's "no application" message, not a crash.
+  - Standalone: `:3004/dashboard/orders` and `:3012/dashboard/orders/o-1004` both render; the `:3012` page loads
+    `remoteEntry.js`, the store chunk and `zustand` from `:3000`, which is the dependency ADR 0016 accepts.
+- Walkthrough: `docs/notes/10-nested.md` gained "Three levels of descendant routes", "State that comes from above",
+  "A host that is also a remote" and problems 5–9 (two stores with no error, a mount without a splat, `./App`
+  without shared `react-router`, the cyclic type graph, the leaf depending on the root).
+- Decisions: [ADR 0016](decisions/0016-shell-exposes-dashboard-state.md) (the shell exposes the dashboard filter;
+  the user chose this over the service container and over props), [ADR 0017](decisions/0017-widget-as-application.md)
+  (a widget that is an application exposes `./App`).
+- Deviations from SPEC/ROADMAP: this work is not in the ROADMAP as written — it was requested mid-iteration and
+  recorded as "Scope — extension" in iteration 10, with its own acceptance criteria. The earlier deviations of
+  iteration 10 (static widget remotes, no per-widget timeout) are unchanged.
+- Known issues / tech debt:
+  - `widget_orders` standalone needs the shell's origin to be up; the other widgets do not.
+  - The widget's links use `ROUTES.dashboard.*`, so it knows it lives under `/dashboard`. A widget that had to be
+    mountable at an arbitrary prefix would need relative links.
+  - Iteration 09 remains deferred (see the entry below).
+- Next session starts with: iteration 11 (Performance) — the waterfall is now one level deeper
+  (shell → dashboard → widget app) and the registry's `url` is ready for preloading.
+
 ### 2026-10-29 — Iteration 10 — Nested micro-frontends: dashboard + widgets
 - Status: done
 - Done:

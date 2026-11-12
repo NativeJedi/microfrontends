@@ -22,6 +22,10 @@ export function getOrders(api: ApiClient): Promise<Order[]> {
   return api.request<Order[]>('/orders');
 }
 
+export function getOrder(api: ApiClient, orderId: string): Promise<Order> {
+  return api.request<Order>(`/orders/${encodeURIComponent(orderId)}`);
+}
+
 export function createOrder(api: ApiClient, request: CreateOrderRequest): Promise<Order> {
   return api.request<Order>('/orders', {
     method: 'POST',

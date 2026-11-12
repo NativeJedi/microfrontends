@@ -3,5 +3,12 @@
   // Types of remote modules come from the remotes' emitted declarations: `cart/CartWidgetV2` resolves through
   // the `cart` workspace package's "exports" (ADR 0008). Webpack ignores this and loads `cart/*` through
   // Module Federation at runtime.
+  "compilerOptions": {
+    // The shell's own container: a package cannot depend on itself, so the self-reference is mapped to the
+    // source. Webpack still resolves `shell/store` through Module Federation (ADR 0016).
+    "paths": {
+      "shell/store": ["./src/exposed/store.ts"]
+    }
+  },
   "include": ["src"]
 }

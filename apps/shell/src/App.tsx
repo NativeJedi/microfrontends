@@ -16,6 +16,9 @@ const CartApp = lazy(() => import('cart/App'));
 const AccountApp = lazy(() => import('account/App'));
 const DashboardApp = lazy(() => import('dashboard/App'));
 const CartWidget = lazy(() => import('cart/CartWidget'));
+// Lazy for the same reason as a remote: the module reads `shell/store`, which lives in the shell's own
+// container and arrives over the network like any other federated module (ADR 0016).
+const PeriodSelector = lazy(() => import('./dashboard-period/PeriodSelector'));
 
 function RecentlyViewedLink() {
   const t = useShellTranslation();
@@ -37,11 +40,15 @@ function Header() {
       <h1 className={styles.title}>{t('title')}</h1>
       <NavLink to={ROUTES.catalog.root}>{t('nav.catalog')}</NavLink>
       <NavLink to={ROUTES.account.root}>{t('nav.account')}</NavLink>
-      <NavLink to={ROUTES.dashboard}>{t('nav.dashboard')}</NavLink>
+      <NavLink to={ROUTES.dashboard.root}>{t('nav.dashboard')}</NavLink>
       <RecentlyViewedLink />
       <Suspense fallback={<span>{t('cartLoading')}</span>}>
         {/* The label is the shell's text, so the shell translates it; the prop contract is unchanged. */}
         <CartWidget label={t('nav.cart')} />
+      </Suspense>
+      {/* State the shell owns and the dashboard's widgets read, two federation levels below. */}
+      <Suspense fallback={null}>
+        <PeriodSelector />
       </Suspense>
       <AuthControls />
       <LanguageSwitcher />
@@ -78,8 +85,9 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            {/* The splat matters: the dashboard is a host itself and owns every URL below /dashboard. */}
             <Route
-              path={ROUTES.dashboard}
+              path={`${ROUTES.dashboard.root}/*`}
               element={
                 <RequireAuth>
                   <DashboardApp />

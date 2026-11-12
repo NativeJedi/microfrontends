@@ -5,6 +5,9 @@
   "exports": {
     "./Widget": {
       "types": "./types/exposed/Widget.d.ts"
+    },
+    "./App": {
+      "types": "./types/exposed/App.d.ts"
     }
   },
   "scripts": {
@@ -25,7 +28,8 @@
     "i18next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-i18next": "catalog:"
+    "react-i18next": "catalog:",
+    "react-router": "catalog:"
   },
   "devDependencies": {
     "@swc/core": "catalog:",

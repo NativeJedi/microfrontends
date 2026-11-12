@@ -1,0 +1,55 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-2, 8px);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--mf-color-muted, #71717a);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-1, 4px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mf-space-2, 8px);
+  padding: var(--mf-space-2, 8px);
+  border: 1px solid var(--mf-color-border, #d4d4d8);
+  border-radius: var(--mf-radius, 6px);
+}
+
+.meta {
+  color: var(--mf-color-muted, #71717a);
+}
+
+.total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Every cell carries a class: a bare `th`/`td` selector would be global and style other apps' tables. */
+.cell {
+  padding: var(--mf-space-1, 4px) var(--mf-space-2, 8px);
+  text-align: left;
+  border-bottom: 1px solid var(--mf-color-border, #d4d4d8);
+}
+
+.number {
+  composes: cell;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

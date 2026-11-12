@@ -356,6 +356,9 @@ importers:
       react-i18next:
         specifier: 'catalog:'
         version: 17.0.20(i18next@26.4.7(typescript@6.0.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+      react-router:
+        specifier: 'catalog:'
+        version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@swc/core':
         specifier: 'catalog:'
@@ -435,6 +438,9 @@ importers:
       react-router:
         specifier: 'catalog:'
         version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      zustand:
+        specifier: 'catalog:'
+        version: 5.0.15(@types/react@19.3.0)(react@19.3.0)(use-sync-external-store@1.7.0(react@19.3.0))
     devDependencies:
       '@swc/core':
         specifier: 'catalog:'
@@ -517,6 +523,9 @@ importers:
       react-i18next:
         specifier: 'catalog:'
         version: 17.0.20(i18next@26.4.7(typescript@6.0.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+      react-router:
+        specifier: 'catalog:'
+        version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@swc/core':
         specifier: 'catalog:'

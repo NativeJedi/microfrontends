@@ -1,9 +1,21 @@
-import { clampWidgetSize, WIDGET_SIZES, type WidgetSettings, type WidgetSize } from '@mf/contracts';
+import {
+  clampWidgetSize,
+  ROUTES,
+  WIDGET_SIZES,
+  type WidgetSettings,
+  type WidgetSize,
+} from '@mf/contracts';
 import { Suspense, use } from 'react';
+import { Link } from 'react-router';
 import { useDashboardTranslation } from '../i18n/use-dashboard-translation';
 import styles from './WidgetCard.module.css';
 import WidgetErrorBoundary from './WidgetErrorBoundary';
-import { forgetWidgetModule, loadWidgetModule, UnknownWidgetError } from './widget-modules';
+import {
+  forgetWidgetModule,
+  hasWidgetApp,
+  loadWidgetModule,
+  UnknownWidgetError,
+} from './widget-modules';
 
 interface WidgetCardProps {
   widgetId: string;
@@ -91,7 +103,13 @@ function LoadedWidget({ widgetId, savedSize, settings, onResize }: WidgetCardPro
       size={size}
       title={title}
       control={
-        <SizeControl widgetId={widgetId} size={size} minSize={meta.minSize} onResize={onResize} />
+        <div className={styles.actions}>
+          {/* Navigation is the host's business: the widget never learns where it is mounted. */}
+          {hasWidgetApp(widgetId) && (
+            <Link to={ROUTES.dashboard.widget(widgetId)}>{t('widget.open')}</Link>
+          )}
+          <SizeControl widgetId={widgetId} size={size} minSize={meta.minSize} onResize={onResize} />
+        </div>
       }
     >
       <Widget settings={settings} size={size} />

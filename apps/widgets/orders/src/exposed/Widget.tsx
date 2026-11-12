@@ -1,9 +1,7 @@
-import { API_CLIENT_SERVICE, type Order } from '@mf/api-client';
+import type { Order } from '@mf/api-client';
 import type { WidgetMeta, WidgetProps, WidgetSize } from '@mf/contracts';
-import { orderQueries } from '@mf/queries';
-import { useService } from '@mf/services';
-import { useQuery } from '@tanstack/react-query';
 import { useOrdersWidgetTranslation } from '../i18n/use-orders-widget-translation';
+import { useOrdersInPeriod } from '../orders/use-orders-in-period';
 import { readLimit } from '../settings';
 import styles from './Widget.module.css';
 
@@ -47,24 +45,26 @@ function OrderRow({ order, size }: { order: Order; size: WidgetSize }) {
 }
 
 /**
- * The newest orders. It reuses `orderQueries.list` — the same key the account app and the sales widget
- * use — so the whole page shares one cached `/orders` response.
+ * The card face of this widget: the newest orders of the period the **shell** is filtering by. The period
+ * crosses two federation levels (shell → dashboard → here) as a store the shell exposes; the number of
+ * rows comes from the dashboard's layout settings. Two owners, two kinds of state, one card.
  */
 export default function OrdersWidget({ settings, size }: WidgetProps) {
   const t = useOrdersWidgetTranslation();
-  const api = useService(API_CLIENT_SERVICE);
   const limit = readLimit(settings);
-  const { data: orders, isPending, error } = useQuery(orderQueries.list(api));
+  const { orders, period, isPending, error } = useOrdersInPeriod();
 
   if (isPending) return <p>{t('loading')}</p>;
   if (error) return <p>{t('loadError', { message: error.message })}</p>;
 
-  const newest = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
+  const newest = (orders ?? []).slice(0, limit);
 
   return (
     <div className={styles.card}>
-      <p className={styles.subtitle}>{t('subtitle', { count: newest.length })}</p>
-      {newest.length === 0 && <p>{t('empty')}</p>}
+      <p className={styles.subtitle}>
+        {t('subtitle', { count: newest.length })} · {t('inPeriod', { count: period })}
+      </p>
+      {newest.length === 0 && <p>{t('emptyInPeriod', { count: period })}</p>}
       <ul className={styles.list}>
         {newest.map((order) => (
           <OrderRow key={order.id} order={order} size={size} />
