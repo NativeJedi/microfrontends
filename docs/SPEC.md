@@ -17,13 +17,13 @@ built from independently deployed widgets.
 
 | App | Path | Role | Dev port | Container name | Exposes (planned) | Introduced in |
 |---|---|---|---|---|---|---|
-| shell | `apps/shell` | Host: layout, header, routing, auth, providers | 3000 | `shell` | — (services via `@mf/services`, iter 8) | 00 |
+| shell | `apps/shell` | Host: layout, header, routing, auth, providers — **and a remote** of its own remotes | 3000 | `shell` | `./store` (dashboard filter, iter 10); services via `@mf/services` (iter 8) | 00 |
 | catalog | `apps/catalog` | Remote: product list and product details (consumes `cart/store`) | 3001 | `catalog` | `./App` (routes; `./ProductList` until iter 3) | 00 |
 | cart | `apps/cart` | Remote: cart page, mini-cart widget, checkout | 3002 | `cart` | `./App`, `./CartWidget`, `./store` | 00 |
 | account | `apps/account` | Remote: profile, order history | 3003 | `account` | `./App` | 03 |
-| dashboard | `apps/dashboard` | Remote for shell **and** host for widgets | 3004 | `dashboard` | `./App` | 10 |
+| dashboard | `apps/dashboard` | Remote for shell **and** host for widgets; a router level of its own | 3004 | `dashboard` | `./App` | 10 |
 | widget-sales | `apps/widgets/sales` | Remote widget | 3011 | `widget_sales` | `./Widget` | 10 |
-| widget-orders | `apps/widgets/orders` | Remote widget | 3012 | `widget_orders` | `./Widget` | 10 |
+| widget-orders | `apps/widgets/orders` | Remote widget **and** a full application (host of `shell`) | 3012 | `widget_orders` | `./Widget`, `./App` | 10 |
 | widget-reviews | `apps/widgets/reviews` | Remote widget | 3013 | `widget_reviews` | `./Widget` | 10 |
 | api | `services/api` | NestJS backend: products, orders, auth, widget registry | 4000 | — | — | 05 |
 
@@ -37,11 +37,14 @@ Container names must be valid JS identifiers (hence `widget_sales`, not `widget-
 | `/catalog/*` | catalog |
 | `/cart/*` | cart |
 | `/account/*` | account (protected, iter 8) |
-| `/dashboard` | dashboard → widgets (protected from iter 8) |
+| `/dashboard/*` | dashboard → widgets (protected from iter 8) |
+| `/dashboard/<widgetId>/*` | dashboard → that widget's `./App` (iter 10) |
 | `/login?returnTo=<path>` | shell (iter 8) |
 
 Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardcoded URLs in links or redirects.
-`/login` was added in iteration 08 (`ROUTES.login(returnTo?)`), `/dashboard` comes in iteration 10.
+`/login` was added in iteration 08 (`ROUTES.login(returnTo?)`), `/dashboard` in iteration 10
+(`ROUTES.dashboard.root` / `.widget(id)` / `.order(id)`). The dashboard is mounted **with a splat**: it is a router
+level of its own and mounts a widget's application below itself ([ADR 0017](decisions/0017-widget-as-application.md)).
 
 ## 3. Architecture
 
@@ -54,8 +57,9 @@ Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardco
                         │  ├─ account   :3003  (remote)                                │
                         │  └─ dashboard :3004  (remote + host)                         │
                         │       ├─ widget_sales   :3011                                │
-                        │       ├─ widget_orders  :3012                                │
-                        │       └─ widget_reviews :3013                                │
+                        │       ├─ widget_orders  :3012 ──┐ (remote + host of shell)    │
+                        │       └─ widget_reviews :3013   │                             │
+                        │  shell/store  ◄─────────────────┘  circular container graph   │
                         │  one share scope "default" across all levels                 │
                         └──────────────────────────────┬───────────────────────────────┘
                                                        │ HTTP (fetch, credentials)
@@ -64,11 +68,18 @@ Route constants (`ROUTES`) live in `packages/contracts` (from iter 3). No hardco
 
 Ownership rules:
 - **shell** owns: URL/history, top-level layout, auth session (session + API client, registered in the service
-  container), QueryClient instance, i18n instance, theme, Sentry init. Remotes never create these when hosted.
+  container), QueryClient instance, i18n instance, theme, the dashboard's global period filter
+  (exposed as `shell/store`, [ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)), Sentry init.
+  Remotes never create these when hosted.
 - **Remotes** own: their routes below their prefix, their UI, their translations (one i18n namespace each),
   their query hooks (using shared query options from `@mf/queries`), and the client state of their domain
   (cart owns the cart store and exposes it as `cart/store`, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
-- **dashboard** owns widget layout and widget loading; widget URLs come from the API registry.
+- **dashboard** owns widget layout (order, size, settings) and widget loading. The API registry (`GET /widgets`)
+  owns which widgets exist; in iteration 10 the widget URLs are still static `remotes` in the dashboard's webpack
+  config ([ADR 0015](decisions/0015-static-widget-remotes.md)) and move to the registry with iteration 09's
+  `loadRemote`. A **widget** owns everything inside its card: its UI, its i18n namespace and the meaning of its
+  settings ([ADR 0014](decisions/0014-widget-contract.md)) — and, when it is an application, its own routes below
+  `/dashboard/<id>` ([ADR 0017](decisions/0017-widget-as-application.md)).
 
 ## 4. Tech stack
 
@@ -92,6 +103,7 @@ pnpm catalogs (from iter 1).
 | Backend | NestJS (in-memory data, no DB) | iter 5; auth in iter 8 |
 | Auth | JWT (JSON Web Token) access token + rotating refresh token, both in httpOnly `SameSite=Strict` cookies (`@nestjs/jwt`, `cookie-parser`) | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
 | Services to remotes | `@mf/services`: generic service container + React provider, MF shared singleton | iter 8, [ADR 0013](decisions/0013-auth-session.md) |
+| Widget contract | `@mf/contracts`: `./Widget` = default component (`settings`, `size`) + named `meta`; optional `./App` = the same widget as a routed application | iter 10, [ADR 0014](decisions/0014-widget-contract.md), [ADR 0017](decisions/0017-widget-as-application.md) |
 | Containers | Docker Compose + nginx | iter 13 |
 | CI | GitHub Actions | iter 13 |
 | Observability | Sentry (⚠ open decision in iter 15) | iter 15 |
@@ -148,11 +160,18 @@ apps/catalog/
 ### Module Federation
 - **Async bootstrap is mandatory** in every app: `src/index.ts` contains only
   `import('./bootstrap')`. This lets the share scope initialize before any shared module is consumed.
-- `output.publicPath: 'auto'` in remotes so their chunks and assets load from their own origin.
+- `output.publicPath: 'auto'` in every app that is a remote — the shell included, since iteration 10 — so chunks
+  and assets load from the origin of the script that asked for them. `HtmlWebpackPlugin({ publicPath: '/' })` keeps
+  the standalone page's own `<script src="/main.js">` absolute.
+- **A host that is also a remote does not share a module cache with its own container.** `main.js` and
+  `remoteEntry.js` are two entry points with two webpack runtimes, so a module reached both ways is evaluated
+  twice. An app that exposes state must therefore consume it through its own container
+  ([ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)).
 - `output.uniqueName` = container name.
 - Remote entry file name: `remoteEntry.js`.
 - Exposed modules: `./App` for a route-level app, `./Widget` for dashboard widgets,
-  other names only for small embeddable pieces (e.g. `./CartWidget`).
+  other names only for small embeddable pieces (e.g. `./CartWidget`) and for exposed state (`./store`).
+  A widget that is also an application exposes both `./Widget` and `./App`.
 - Exposed React modules use a **default export** (for `React.lazy`). Everything else uses named exports.
 - Types of remote modules (iter 4, [ADR 0008](decisions/0008-contracts-between-micro-frontends.md), supersedes
   ADR 0006): the **remote owns** the props types of its exposes (named exports next to the default-exported component).
@@ -180,10 +199,13 @@ apps/catalog/
 - The shell owns the only `<BrowserRouter>` and mounts each remote's `./App` under its prefix with a splat
   (`/catalog/*`). Remotes declare **relative** `<Routes>` and never render a router in `./App`; their
   standalone `bootstrap.tsx` wraps `<App />` in its own `<BrowserRouter>` under the same prefix.
+- Routing nests as deep as federation does: a remote that is a host mounts its own children with a splat
+  (`:widgetId/*` in the dashboard) and they match only what is left of the URL. Each level is *descendant* routes
+  and never learns where it is mounted.
 - Every link and redirect uses `ROUTES` from `@mf/contracts`, also inside a remote (relative links in a splat
   route resolve against the full URL).
-- Shell `output.publicPath: '/'`; remotes keep `'auto'` and set `HtmlWebpackPlugin({ publicPath: '/' })` so
-  deep links survive a refresh.
+- `output.publicPath: 'auto'` everywhere with `HtmlWebpackPlugin({ publicPath: '/' })` so deep links survive a
+  refresh (the shell used a plain `'/'` until it became a remote in iteration 10).
 - Workspace packages such as `@mf/contracts` export TypeScript source and are bundled into each app; they are
   not MF-shared unless they hold state.
 
@@ -201,7 +223,9 @@ apps/catalog/
   `QueryClient` defaults, so a remote caches the same way hosted and standalone.
 - Mutations invalidate by the owner's key factory (`orderKeys.all`); other apps refetch on their next mount.
 - Shared client state is owned by the app of its domain and exposed as functions (`cart/store`: `addToCart`,
-  `useCartQuantity`), never as the raw store. Persisted keys are prefixed with the owner (`cart:items`) and the
+  `useCartQuantity`; `shell/store`: `useDashboardPeriod`, `setDashboardPeriod`), never as the raw store. The owner
+  may be the shell itself; it then consumes its own expose through its container
+  ([ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)). Persisted keys are prefixed with the owner (`cart:items`) and the
   persisted value is narrowed on load (`localStorage` is untrusted).
 
 ### Styles (iter 6, [notes](notes/06-styles.md), [ADR 0011](decisions/0011-style-isolation.md))
@@ -245,6 +269,29 @@ apps/catalog/
 - Route guards (`RequireAuth`) are UX only; the API protects data (global guard, `@AuthMode`). `returnTo` accepts
   only same-app absolute paths.
 
+### Dashboard widgets (iter 10, [notes](notes/10-nested.md), [ADR 0014](decisions/0014-widget-contract.md), [ADR 0015](decisions/0015-static-widget-remotes.md))
+- The dashboard is a **remote and a host at once**: one `ModuleFederationPlugin` with both `exposes` and `remotes`.
+  An intermediate host must declare the same singletons as the shell — it does not create a scope for its children,
+  it passes on the one it was initialized with, and its own imports must be consumptions from it.
+- A widget exposes `./Widget`: a default-exported component taking `WidgetProps` (`settings`, `size`) plus a named
+  export `meta: WidgetMeta` (`id`, `title`, `defaultSize`, `minSize`). The host resolves the module itself (`use()`
+  on a promise cached per widget id) because `React.lazy` cannot reach `meta`; a retry drops that cached promise.
+- A widget's **card** (`./Widget`) renders no routes and no links and works in any host. A widget that is also an
+  **application** exposes `./App` as well: descendant `<Routes>`, `react-router` as a shared singleton, and a host
+  that owns a router ([ADR 0017](decisions/0017-widget-as-application.md)). The dashboard mounts it at
+  `/dashboard/<widgetId>/*` and renders the link to it itself — navigation is the host's business. Their i18n
+  namespace is their container name (`widget_sales`, …).
+- State that comes from **above** the dashboard (the period filter) reaches a widget directly from `shell/store`:
+  the dashboard forwards nothing and does not know it exists. State the dashboard owns (size, settings) still
+  travels as props.
+- **Size is a negotiation:** the layout proposes, the widget's `minSize` vetoes (`clampWidgetSize`). The card heading
+  is the host's text, translated by the dashboard and keyed by widget id, with `meta.title` as the fallback for a
+  widget it has no translation for.
+- `settings` crosses as `Readonly<Record<string, unknown>>` and is narrowed by the widget that owns the keys. The API
+  stores layouts without understanding them (validation stops at "a JSON object").
+- **One error boundary and one `<Suspense>` per card**, so the blast radius of a crash matches the deployment unit
+  and one slow `remoteEntry.js` does not hold the others back.
+
 ### Code
 - TypeScript strict. No `any` in app code; `unknown` + narrowing at MF boundaries.
 - Folder names kebab-case, components PascalCase, hooks `useX`.
@@ -276,8 +323,9 @@ Rules:
   are not tree-shaken, so sharing a big utility lib can cost more than duplicating the parts used.
 - Workspace packages are not shared, except `@mf/services`: its module holds a React context, whose identity must be
   one per page (iter 8). It exports `./package.json` for `requiredVersion`.
-- Store libraries are not shared: store identity comes from the owner's exposed module (`cart/store`), and only the
-  owner imports `zustand` (iter 5, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md)).
+- Store libraries are not shared: store identity comes from the owner's exposed module (`cart/store`,
+  `shell/store`), and only the owner imports `zustand` (iter 5, [ADR 0009](decisions/0009-cart-store-exposed-by-owner.md),
+  iter 10, [ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)).
 - Dev-only `window.__mfDebug()` in shell prints the share scope (package, version, provider, loaded).
 
 ## 8. State model (iter 5, [notes](notes/05-state.md))
@@ -292,7 +340,9 @@ Rules:
 ## 9. Environments and config
 
 - Dev: every app on its own port (section 2). Remote URLs: static in shell config until iter 9,
-  then runtime `remotes.json` / API registry.
+  then runtime `remotes.json` / API registry. Iteration 09 is deferred, so the dashboard's widget URLs are
+  static too, although the API registry (`GET /widgets`) that will replace them already exists
+  ([ADR 0015](decisions/0015-static-widget-remotes.md)).
 - From iter 13: one build artifact per app, environment config injected at runtime
   (never baked in with build-time env vars).
 - API base URL `http://localhost:4000` in dev. CORS allows the dev ports with credentials.

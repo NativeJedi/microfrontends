@@ -19,7 +19,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-i18next": "catalog:",
-    "react-router": "catalog:"
+    "react-router": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@swc/core": "catalog:",
@@ -29,6 +30,7 @@
     "cart": "workspace:*",
     "catalog": "workspace:*",
     "css-loader": "catalog:",
+    "dashboard": "workspace:*",
     "html-webpack-plugin": "catalog:",
     "mini-css-extract-plugin": "catalog:",
     "style-loader": "catalog:",

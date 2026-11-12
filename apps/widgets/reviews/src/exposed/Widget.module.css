@@ -1,0 +1,40 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-2, 8px);
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--mf-color-muted, #71717a);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-2, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mf-space-2, 8px);
+}
+
+.rating {
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.comment {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.author {
+  font-size: 0.85rem;
+  color: var(--mf-color-muted, #71717a);
+}

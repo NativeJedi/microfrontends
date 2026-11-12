@@ -5,3 +5,4 @@ pnpm-lock.yaml
 .idea
 docs
 apps/*/types
+apps/widgets/*/types

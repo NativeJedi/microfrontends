@@ -1,6 +1,6 @@
 # PROGRESS
 
-**Current iteration:** 09 — Resilience + manual dynamic remote loading (`todo`)
+**Current iteration:** 11 — Performance (`todo`; 09 still deferred, see the entry of 2026-10-29)
 
 Newest entry on top. One entry per session. Keep entries short: the next agent reads only the latest one.
 
@@ -19,6 +19,123 @@ Newest entry on top. One entry per session. Keep entries short: the next agent r
 ```
 
 ## Entries
+
+### 2026-10-29 — Iteration 10 (extension) — A widget that is an application: nested routing + state from the shell
+- Status: done
+- Done:
+  - `widget_orders` exposes `./App` next to `./Widget`: one deployment, two entry points. The application renders
+    descendant `<Routes>` (`index` = every order of the period, `:orderId` = details) and `react-router` became a
+    shared singleton in `dashboard` and `widget_orders` ([ADR 0017](decisions/0017-widget-as-application.md)).
+  - Three routing levels: shell `/dashboard/*` → dashboard `:widgetId/*` → widget `index` / `:orderId`.
+    `ROUTES.dashboard` is now an object (`root`, `widget(id)`, `order(id)`). The dashboard mounts widget apps
+    generically and renders the card's "Open" link itself — navigation is the host's business.
+  - The shell became a **remote of its own remotes**: `exposes: { './store' }` publishes the dashboard's period
+    filter (7/30/90 days, Zustand + persist as `dashboard:period`), and `widget_orders` reads it directly. The
+    dashboard forwards nothing ([ADR 0016](decisions/0016-shell-exposes-dashboard-state.md)).
+  - The shell reads its own store through its own container (`shell` in its own `remotes`, `paths` in tsconfig),
+    because `main.js` and `remoteEntry.js` are two webpack runtimes with two module caches. Its `publicPath`
+    moved `'/'` → `'auto'`, and `HtmlWebpackPlugin` got `excludeChunks: ['shell']` so the container file is not
+    executed a second time under a different URL.
+  - The expose's type (`DashboardPeriodStore`) lives in `@mf/contracts`, not in generated declarations: the
+    container graph is circular (shell → dashboard → widget_orders → shell) and a `workspace:*` on `shell` would
+    make the Turborepo `types` graph cyclic. `widget_orders/src/shell-store.d.ts` declares it from that interface.
+  - api: `GET /orders/:orderId`; `@mf/api-client` `getOrder`; `@mf/queries` `orderQueries.detail`.
+- Verified in the browser (shell :3000, dashboard :3004, widget :3012):
+  - `/dashboard` → "Open" → `/dashboard/orders` → `/dashboard/orders/o-1003`; a refresh on the deep link renders
+    the order (`GET /orders/o-1003`, with the iteration-08 401 → refresh → retry), back/back/forward keep URL and
+    screen in sync across all three levels.
+  - Changing the period in the shell's header to 7 days: the application's list went 5 → 3 rows and the card's
+    subtitle to "last 7 days" instantly, with no reload and no new request — one store instance, one cached
+    `GET /orders`. `dashboard:period` persisted as `{"state":{"period":7},"version":1}`.
+  - `window.__mfDebug()`: 7 rows, one per shared package, no duplicates. `react-router 8.4.0` is provided by
+    `widget_orders` — the same `uniqueName` tiebreak among equal versions as `widget_sales` for the rest.
+  - The shell page fetches `:3000/remoteEntry.js` exactly once (one container, one module cache).
+  - `/dashboard/sales` (a widget with no `./App`) renders the dashboard's "no application" message, not a crash.
+  - Standalone: `:3004/dashboard/orders` and `:3012/dashboard/orders/o-1004` both render; the `:3012` page loads
+    `remoteEntry.js`, the store chunk and `zustand` from `:3000`, which is the dependency ADR 0016 accepts.
+- Walkthrough: `docs/notes/10-nested.md` gained "Three levels of descendant routes", "State that comes from above",
+  "A host that is also a remote" and problems 5–9 (two stores with no error, a mount without a splat, `./App`
+  without shared `react-router`, the cyclic type graph, the leaf depending on the root).
+- Decisions: [ADR 0016](decisions/0016-shell-exposes-dashboard-state.md) (the shell exposes the dashboard filter;
+  the user chose this over the service container and over props), [ADR 0017](decisions/0017-widget-as-application.md)
+  (a widget that is an application exposes `./App`).
+- Deviations from SPEC/ROADMAP: this work is not in the ROADMAP as written — it was requested mid-iteration and
+  recorded as "Scope — extension" in iteration 10, with its own acceptance criteria. The earlier deviations of
+  iteration 10 (static widget remotes, no per-widget timeout) are unchanged.
+- Known issues / tech debt:
+  - `widget_orders` standalone needs the shell's origin to be up; the other widgets do not.
+  - The widget's links use `ROUTES.dashboard.*`, so it knows it lives under `/dashboard`. A widget that had to be
+    mountable at an arbitrary prefix would need relative links.
+  - Iteration 09 remains deferred (see the entry below).
+- Next session starts with: iteration 11 (Performance) — the waterfall is now one level deeper
+  (shell → dashboard → widget app) and the registry's `url` is ready for preloading.
+
+### 2026-10-29 — Iteration 10 — Nested micro-frontends: dashboard + widgets
+- Status: done
+- Done:
+  - `apps/dashboard` (3004): the only app with `exposes` **and** `remotes` — a remote of the shell at `/dashboard`
+    (protected by `RequireAuth`, which also closes the open item from iteration 08) and a host of three widgets.
+    Owns the layout: order, size, settings, one error boundary and one `<Suspense>` per card.
+  - `apps/widgets/{sales,orders,reviews}` (3011–3013), containers `widget_sales` / `widget_orders` /
+    `widget_reviews`: each exposes `./Widget` (default component + named `meta`), owns its i18n namespace and
+    declares no `react-router`.
+  - `@mf/contracts`: `WidgetMeta`, `WidgetProps`, `WidgetSettings`, `WidgetSize`, `WIDGET_SIZES`,
+    `clampWidgetSize`, `ROUTES.dashboard`.
+  - api: `GET /widgets` (registry), `GET`/`PUT /dashboard/layout`, `GET /reviews`; order seed data is now relative
+    to "now" so the sales widget always has a period to show. CORS extended to 3004 and 3011–3013.
+  - `@mf/api-client` + `@mf/queries`: `widgetQueries.registry/layout`, `reviewQueries.list`, `saveDashboardLayout`.
+  - Verified in the browser (shell → dashboard → widgets, and every app standalone):
+    - `/dashboard` while logged out redirects to `/login?returnTo=%2Fdashboard`; after login the dashboard renders
+      with all three widgets.
+    - `window.__mfDebug()` on `/dashboard`: one row per shared package, no duplicates — one React across all three
+      levels. `providedBy` is `widget_sales`, the `uniqueName` tiebreak among equal versions.
+    - Two widgets using `orderQueries.list` produce **one** `GET /orders`.
+    - Resize persists through `PUT /dashboard/layout` and survives a reload; the sales widget's `minSize` renders
+      "Small" as a disabled option.
+    - Local experiments, reverted and never committed: a throwing reviews widget (only that card fell back, with
+      Retry) and a fourth registry entry `inventory` (its card said the build does not know it; the others kept
+      working).
+- Walkthrough: notes 10 covers all three ROADMAP problems plus the timeout that cannot be honoured with static
+  remotes — see `docs/notes/10-nested.md`.
+- Decisions: [ADR 0014](decisions/0014-widget-contract.md) (widget contract), [ADR 0015](decisions/0015-static-widget-remotes.md)
+  (static widget remotes, with the unmet criteria recorded).
+- Deviations from SPEC/ROADMAP:
+  - Widgets load as static `remotes`, not via `loadRemote` (user's choice, ADR 0015). The acceptance criterion
+    "adding a registry entry shows a new widget" and the per-widget timeout are **not met** and are marked as such
+    in ROADMAP; neither was faked.
+  - The dashboard does not share `react-router`: it renders no router and no links, so declaring it would be a line
+    of config nothing justifies.
+- Known issues / tech debt:
+  - Iteration 09 remains deferred. Its branch `feat/iteration-09-resilience` carries an ADR numbered 0014, which
+    this iteration has now used — renumber it if that branch is revisited.
+  - `WidgetMeta.id` and the registry id must match; nothing checks it at build time (contract testing, iteration 12).
+  - Still open from iteration 08: re-check "three simultaneous 401s → one refresh" with three apps on one screen.
+  - The API's in-memory layout and refresh-token store reset on every `nest --watch` restart; the standalone pages
+    then need one extra reload to log in again.
+- Next session starts with: iteration 11 (Performance) — read its ROADMAP section first; the dashboard with three
+  widgets is the most interesting page to measure.
+
+### 2026-10-29 — Iteration 09 — Resilience + manual dynamic remote loading
+- Status: deferred — implemented on a branch, not merged
+- Done:
+  - Implemented and verified on branch `feat/iteration-09-resilience` (commit `0d95530`, PR open, not merged):
+    `@mf/runtime` with a hand-written `loadRemote`, runtime `remotes.json`, `RemoteSlot` per remote,
+    ADR 0014 and `docs/notes/09-resilience.md`. None of it is on `main`.
+  - `main` keeps the static `remotes` of iteration 08.
+- Walkthrough: done in the session; the notes exist only on the branch.
+- Decisions: the user deferred the iteration — the hand-written runtime (~380 lines of code, roughly half of
+  it beyond the ROADMAP scope) was judged over-engineered for now. Postponed rather than simplified.
+- Deviations from SPEC/ROADMAP:
+  - Iteration 09 skipped for now; iteration 10 starts on static remotes.
+  - SPEC still describes the iteration-09 plan (`mf-runtime`, runtime `remotes.json`); unchanged on purpose.
+- Known issues / tech debt:
+  - Iteration 10 depends on `loadRemote`: with static remotes its criterion "adding a registry entry (no
+    dashboard rebuild) shows a new widget" and the per-widget timeout cannot be met. Record them as not met
+    in iteration 10, do not weaken them.
+  - Still open from iteration 08: re-check "three simultaneous 401s → one refresh" with three apps on one
+    screen, and protect `/dashboard`.
+- Next session starts with: iteration 10 on static remotes — confirm with the user what the three widgets
+  show before writing their UI. If 09 is revisited, start from the branch.
 
 ### 2026-10-19 — Iteration 08 — Auth and session
 - Status: done

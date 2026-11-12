@@ -1,0 +1,35 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-2, 8px);
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--mf-color-muted, #71717a);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mf-space-1, 4px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mf-space-2, 8px);
+}
+
+.meta {
+  font-size: 0.85rem;
+  color: var(--mf-color-muted, #71717a);
+}
+
+.total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
